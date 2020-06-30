@@ -1,20 +1,20 @@
 package example.domain
 
+//import example.utils.ValidDate
+//import example.utils.ValidTimestamp
 import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import example.utils.AccountTypeConverter
 import example.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import example.utils.Constants.ASCII_PATTERN
+import example.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
 import example.utils.Constants.MUST_BE_ASCII_MESSAGE
 import example.utils.Constants.MUST_BE_DOLLAR_MESSAGE
-import example.utils.AccountTypeConverter
-import example.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
 import example.utils.Constants.MUST_BE_UUID_MESSAGE
 import example.utils.Constants.UUID_PATTERN
-//import example.utils.ValidDate
-//import example.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
@@ -26,7 +26,7 @@ import javax.validation.constraints.*
 @Proxy(lazy = false)
 //@Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Transaction (
+data class Transaction(
 //TODO: the field activeStatus
 
         @Id

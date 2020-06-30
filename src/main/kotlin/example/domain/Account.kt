@@ -7,8 +7,8 @@ import example.utils.AccountTypeConverter
 import example.utils.Constants
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
-import javax.persistence.*
 import java.sql.Timestamp
+import javax.persistence.*
 import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern

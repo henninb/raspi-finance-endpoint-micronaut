@@ -3,7 +3,6 @@ package example.repositories
 import example.domain.Account
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.repository.CrudRepository
-import java.util.*
 
 
 //@JdbcRepository(dialect = Dialect.H2)

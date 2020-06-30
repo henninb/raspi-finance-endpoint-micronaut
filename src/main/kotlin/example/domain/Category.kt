@@ -3,10 +3,10 @@ package example.domain
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.hibernate.annotations.Proxy
 import javax.persistence.*
 import javax.validation.constraints.Min
 import javax.validation.constraints.Size
-import org.hibernate.annotations.Proxy
 
 @Entity
 @Proxy(lazy = false)
@@ -23,7 +23,7 @@ data class Category(
         @JsonProperty
         var category: String
 
-        ) {
+) {
     constructor() : this(0L, "")
 
     override fun toString(): String = mapper.writeValueAsString(this)

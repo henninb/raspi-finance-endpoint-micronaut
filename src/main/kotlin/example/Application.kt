@@ -11,7 +11,6 @@ import io.micronaut.runtime.Micronaut
 //}
 
 
-
 open class Application {
     companion object {
         @JvmStatic

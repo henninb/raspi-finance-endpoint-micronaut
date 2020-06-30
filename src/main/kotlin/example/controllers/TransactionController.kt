@@ -8,7 +8,7 @@ import io.micronaut.http.annotation.Produces
 import javax.inject.Inject
 
 @Controller("/transactions")
-class TransactionController (@Inject val personRepository: PersonRepository) {
+class TransactionController(@Inject val personRepository: PersonRepository) {
 
     val payload = """
         [{"test":123}]

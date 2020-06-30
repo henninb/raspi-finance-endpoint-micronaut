@@ -2,7 +2,6 @@ package example.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.hibernate.annotations.Proxy
 import javax.persistence.*
 
 //@Proxy(lazy = false)

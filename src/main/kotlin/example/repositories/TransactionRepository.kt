@@ -4,10 +4,8 @@ import example.domain.Transaction
 import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.repository.CrudRepository
-
-import java.util.*
-
 import java.math.BigDecimal
+import java.util.*
 import javax.transaction.Transactional
 
 @Repository
