@@ -1,0 +1,32 @@
+micronaut:
+  server:
+    port: 8081
+  application:
+    name: raspi-finance-enpoint-micro
+
+
+datasources:
+  default:
+    url: jdbc:postgresql://hornsup:5432/finance_db
+    driverClassName: org.postgresql.Driver
+    username: henninb
+    password: monday1
+#    schema-generate: CREATE_DROP
+    schema-generate: NONE
+    dialect: POSTGRES
+#jpa:
+#  default:
+#    properties:
+#      hibernate:
+#        bytecode:
+#          provider: none
+
+jpa:
+  default:
+#    packages-to-scan:
+#      - 'example'
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+        show_sql: true
