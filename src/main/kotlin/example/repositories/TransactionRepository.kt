@@ -24,4 +24,6 @@ interface TransactionRepository : CrudRepository<Transaction, Long> {
     @Query("UPDATE TransactionEntity set cleared = ?1 WHERE guid = ?2")
     @Transactional
     fun setClearedByGuid(cleared: Int, guild: String)
+
+    //fun save(transaction: Transaction)
 }
