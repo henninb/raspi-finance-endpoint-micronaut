@@ -54,7 +54,7 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
         var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
             //logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
-            //transaction.accountId = accountOptional.get().accountId
+            transaction.accountId = accountOptional.get().accountId
         } else {
             //logger.info("METRIC_ACCOUNT_NOT_FOUND_COUNTER")
             val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
@@ -62,24 +62,24 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
             accountService.insertAccount(account)
             //logger.debug("called insertAccount")
             accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
-            //transaction.accountId = accountOptional.get().accountId
+            transaction.accountId = accountOptional.get().accountId
             //meterRegistry.counter(METRIC_ACCOUNT_NOT_FOUND_COUNTER).increment()
         }
     }
 
     private fun processCategory(transaction: Transaction) {
-//        when {
-//            transaction.category != "" -> {
-//                val optionalCategory = categoryService.findByCategory(transaction.category)
-//                if (optionalCategory.isPresent) {
-//                    transaction.categories.add(optionalCategory.get())
-//                } else {
-//                    val category = createDefaultCategory(transaction.category)
-//                    categoryService.insertCategory(category)
-//                    transaction.categories.add(category)
-//                }
-//            }
-//        }
+        when {
+            transaction.category != "" -> {
+                val optionalCategory = categoryService.findByCategory(transaction.category)
+                if (optionalCategory.isPresent) {
+                    transaction.categories.add(optionalCategory.get())
+                } else {
+                    val category = createDefaultCategory(transaction.category)
+                    categoryService.insertCategory(category)
+                    transaction.categories.add(category)
+                }
+            }
+        }
     }
 
     private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {

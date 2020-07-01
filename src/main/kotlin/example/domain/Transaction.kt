@@ -40,9 +40,9 @@ data class Transaction(
         @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         var guid: String,
 
-//        @JsonProperty
-//        @field:Min(value = 0L)
-//        var accountId: Long,
+        @JsonProperty
+        @field:Min(value = 0L)
+        var accountId: Long,
 
         @Column(columnDefinition = "VARCHAR")
         @JsonProperty
@@ -100,11 +100,10 @@ data class Transaction(
         @field:Size(max = 70)
         var sha256: String) {
 
-    constructor() : this(0L, "", AccountType.Credit, "", Date(0),
+    constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
             "", "", BigDecimal(0.00), 0, false, "",
             Timestamp(0), Timestamp(0), "") {
     }
-
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
@@ -122,17 +121,17 @@ data class Transaction(
     }
 
 //    //TODO: camel case or snake case?
-//    @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
-//    //@JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
-//    @JsonIgnore
-//    var account: Account? = null
+    @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
+    @JsonIgnore
+    var account: Account? = null
 
-//    @ManyToMany
-////    @JoinTable(name = "t_transaction_categories",
-////            joinColumns = [JoinColumn(name = "transactionId")],
-////            inverseJoinColumns = [JoinColumn(name = "categoryId")])
-//    @JsonIgnore
-//    var categories = mutableListOf<Category>()
+    @ManyToMany
+//    @JoinTable(name = "t_transaction_categories",
+//            joinColumns = [JoinColumn(name = "transactionId")],
+//            inverseJoinColumns = [JoinColumn(name = "categoryId")])
+    @JsonIgnore
+    var categories = mutableListOf<Category>()
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

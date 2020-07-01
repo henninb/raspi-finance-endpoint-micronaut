@@ -26,7 +26,7 @@ class TransactionController(@Inject val transactionService: TransactionService,
         [{"test":123}]
     """.trimIndent()
 
-    @Get("/person")
+    @Get("/insert")
     @Produces(MediaType.TEXT_PLAIN)
     fun index(): String {
         var transaction = Transaction()
@@ -34,12 +34,12 @@ class TransactionController(@Inject val transactionService: TransactionService,
         var account = Account()
 
         //transaction.transactionId = 1002
-        transaction.guid = "4ea3be58-3993-46de-88a2-4ffc7f1d73bd"
+        transaction.guid = "4ea3be58-3993-46de-88a2-4ffc7f1d7345"
         //transaction.accountId = 1
         transaction.accountType = AccountType.Credit
-        transaction.accountNameOwner = "foo_brian"
+        transaction.accountNameOwner = "new_brian"
         transaction.transactionDate = Date(1553645394)
-        transaction.description = "aliexpress.com"
+        transaction.description = "test.com"
         transaction.category = "online"
         transaction.amount = BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
         transaction.cleared = 1
@@ -50,10 +50,10 @@ class TransactionController(@Inject val transactionService: TransactionService,
         transaction.sha256 = ""
         transactionService.insertTransaction(transaction)
 
-        category.category = "foobar"
+        category.category = "foobar123"
         categoryService.insertCategory(category)
 
-        account.accountNameOwner = "test_brian"
+        account.accountNameOwner = "blah_brian"
         account.accountType = AccountType.Credit
         account.activeStatus = true
         account.moniker = "1234"
