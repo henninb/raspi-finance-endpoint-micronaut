@@ -5,6 +5,8 @@ import example.domain.AccountType
 import example.domain.Category
 import example.domain.Transaction
 import example.repositories.TransactionRepository
+import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
 import javax.inject.Inject
@@ -18,27 +20,39 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
                          @Inject val categoryService: CategoryService,
                          @Inject val accountService: AccountService) {
 
-    fun findByGuid(guid: String): Optional<Transaction> {
-        //logger.info("call findByGuid")
+    private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    fun findAllTransactions(): MutableIterable<Transaction> {
+        return transactionRepository.findAll()
+    }
+
+    fun deleteByIdFromTransactionCategories(transactionId: Long): Boolean {
+        transactionRepository.deleteByIdFromTransactionCategories(transactionId)
+        return true
+    }
+
+    fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
-            return transactionOptional
+            transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
+            transactionRepository.deleteByGuid(guid)
+            return true
         }
-        return Optional.empty()
+        return false
     }
 
     fun insertTransaction(transaction: Transaction): Boolean {
 
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            //logger.info("insertTransaction() ConstraintViolation")
+            logger.info("insertTransaction() ConstraintViolation")
         }
-        //logger.info("*** insert transaction ***")
+        logger.info("*** insert transaction ***")
         val transactionOptional = findByGuid(transaction.guid)
 
         if (transactionOptional.isPresent) {
             val transactionDb = transactionOptional.get()
-            //logger.info("*** update transaction ***")
+            logger.info("*** update transaction ***")
             return updateTransaction(transactionDb, transaction)
         }
 
@@ -46,23 +60,25 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
         processCategory(transaction)
         println("transaction = ${transaction}")
         transactionRepository.save(transaction)
-        //logger.info("*** inserted transaction ***")
+        logger.info("*** inserted transaction ***")
         return true
     }
 
     private fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
-            //logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
+            logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
             transaction.accountId = accountOptional.get().accountId
+            transaction.accountType = accountOptional.get().accountType
         } else {
-            //logger.info("METRIC_ACCOUNT_NOT_FOUND_COUNTER")
+            logger.info("METRIC_ACCOUNT_NOT_FOUND_COUNTER")
             val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
-            //logger.debug("will insertAccount")
+            logger.debug("will insertAccount")
             accountService.insertAccount(account)
-            //logger.debug("called insertAccount")
+            logger.debug("called insertAccount")
             accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
             transaction.accountId = accountOptional.get().accountId
+            transaction.accountType = accountOptional.get().accountType
             //meterRegistry.counter(METRIC_ACCOUNT_NOT_FOUND_COUNTER).increment()
         }
     }
@@ -83,25 +99,24 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
     }
 
     private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {
-//        if (transactionDb.accountNameOwner.trim() == transaction.accountNameOwner) {
-//
-//            if (transactionDb.amount != transaction.amount) {
-//                //logger.info("discrepancy in the amount for <${transactionDb.guid}>")
-//                //TODO: metric for this
-//                transactionRepository.setAmountByGuid(transaction.amount, transaction.guid)
-//                return true
-//            }
-//
-//            if (transactionDb.cleared != transaction.cleared) {
-//                //logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
-//                //TODO: metric for this
-//                transactionRepository.setClearedByGuid(transaction.cleared, transaction.guid)
-//                return true
-//            }
-//            return true
-//        }
+        if (transactionDb.accountNameOwner.trim() == transaction.accountNameOwner) {
 
-        //logger.info("transaction already exists, no transaction data inserted.")
+            if (transactionDb.amount != transaction.amount) {
+                logger.info("discrepancy in the amount for <${transactionDb.guid}>")
+                //TODO: metric for this
+                transactionRepository.setAmountByGuid(transaction.amount, transaction.guid)
+                return true
+            }
+
+            if (transactionDb.cleared != transaction.cleared) {
+                logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
+                //TODO: metric for this
+                transactionRepository.setClearedByGuid(transaction.cleared, transaction.guid)
+                return true
+            }
+        }
+
+        logger.info("transaction already exists, no transaction data inserted.")
         return false
     }
 
@@ -124,4 +139,63 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
         return account
     }
 
+    fun findByGuid(guid: String): Optional<Transaction> {
+        logger.info("call findByGuid")
+        val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
+        if (transactionOptional.isPresent) {
+            return transactionOptional
+        }
+        return Optional.empty()
+    }
+
+    fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+
+        val result: MutableMap<String, BigDecimal> = HashMap()
+        var totalsCleared= 0.00
+        var totals = 0.00
+
+        //TODO: Fix this
+        //try {
+            totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
+            totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+        //} catch( e: EmptyResultDataAccessException) {
+        //    logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
+        //}
+
+        result["totals"] = BigDecimal(totals)
+        result["totalsCleared"] = BigDecimal(totalsCleared)
+        return result
+    }
+
+    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
+        val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
+        if (transactions.isEmpty()) {
+            logger.error("an empty list of AccountNameOwner.")
+            //return something
+        }
+        return transactions
+    }
+
+    fun patchTransaction(transaction: Transaction): Boolean {
+        val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
+        if (constraintViolations.isNotEmpty()) {
+            logger.info("patchTransaction() ConstraintViolation.")
+        }
+        val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
+        //TODO: add logic for patch
+        if (optionalTransaction.isPresent) {
+            val fromDb = optionalTransaction.get()
+            if (fromDb.guid == transaction.guid) {
+                logger.info("successful patch $transaction")
+                transactionRepository.save(transaction)
+            } else {
+                logger.warn("GUID did not match any database records.")
+                return false
+            }
+        } else {
+            logger.warn("WARN: cannot patch a transaction without a valid GUID.")
+            return false
+        }
+        return true
+    }
 }

@@ -1,5 +1,6 @@
 package example.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import example.domain.Account
 import example.domain.AccountType
 import example.domain.Category
@@ -7,70 +8,145 @@ import example.domain.Transaction
 import example.services.AccountService
 import example.services.CategoryService
 import example.services.TransactionService
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Produces
+import io.micronaut.http.annotation.*
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Date
 import java.sql.Timestamp
+import java.util.*
 import javax.inject.Inject
+import javax.validation.ConstraintViolationException
 
-@Controller("/transactions")
-class TransactionController(@Inject val transactionService: TransactionService,
-@Inject val categoryService: CategoryService,
-                            @Inject val accountService: AccountService) {
+@Controller("/transaction")
+class TransactionController(@Inject val transactionService: TransactionService) {
+    private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    val payload = """
-        [{"test":123}]
-    """.trimIndent()
+//    @Get("/all")
+//    fun findAllTransactions(): MutableIterable<Transaction>? {
+//        val transactions: MutableIterable<Transaction> = transactionService.findAllTransactions()
+//        if (transactions.isEmpty()) {
+//            return HttpResponse.notFound()
+//        }
+//        return HttpResponse.ok(transactions)
+//    }
 
-    @Get("/insert")
-    @Produces(MediaType.TEXT_PLAIN)
-    fun index(): String {
-        var transaction = Transaction()
-        var category = Category()
-        var account = Account()
-
-        //transaction.transactionId = 1002
-        transaction.guid = "4ea3be58-3993-46de-88a2-4ffc7f1d7345"
-        //transaction.accountId = 1
-        transaction.accountType = AccountType.Credit
-        transaction.accountNameOwner = "new_brian"
-        transaction.transactionDate = Date(1553645394)
-        transaction.description = "test.com"
-        transaction.category = "online"
-        transaction.amount = BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
-        transaction.cleared = 1
-        transaction.reoccurring = false
-        transaction.notes = ""
-        transaction.dateUpdated = Timestamp(1553645394000)
-        transaction.dateAdded = Timestamp(1553645394000)
-        transaction.sha256 = ""
-        transactionService.insertTransaction(transaction)
-
-        category.category = "foobar123"
-        categoryService.insertCategory(category)
-
-        account.accountNameOwner = "blah_brian"
-        account.accountType = AccountType.Credit
-        account.activeStatus = true
-        account.moniker = "1234"
-        account.totals = BigDecimal("0.0")
-        account.totalsBalanced = BigDecimal("0.0")
-        account.dateClosed = Timestamp(0)
-        account.dateUpdated = Timestamp(1553645394000)
-        account.dateAdded = Timestamp(1553645394000)
-
-        accountService.insertAccount(account)
-
-        return "test"
+    //curl http://localhost:8080/transaction/account/select/usbankcash_brian
+    @Get("/account/select/{accountNameOwner}")
+    fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<List<Transaction>> {
+        val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
+        if (transactions.isEmpty()) {
+            return HttpResponse.notFound()
+        }
+        return HttpResponse.ok(transactions)
     }
 
-    @Get("/test")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun findAll(): String {
-        return payload
+    //curl http://localhost:8080/transaction/account/totals/chase_brian
+    @Get("/account/totals/{accountNameOwner}")
+    fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<String> {
+        val results: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
+
+        logger.info("totals=${results}")
+
+        return HttpResponse.ok(mapper.writeValueAsString(results))
+    }
+
+    //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    @Get("/select/{guid}")
+    fun findTransaction(@PathVariable("guid") guid: String): HttpResponse<Transaction> {
+        logger.debug("findTransaction() guid = $guid")
+        val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
+        if (transactionOption.isPresent) {
+            val transaction: Transaction = transactionOption.get()
+            println("transaction.categries = ${transaction.categories}")
+            return HttpResponse.ok(transaction)
+        }
+
+        logger.info("guid not found = $guid")
+        //return ResponseEntity.notFound().build()  //404
+        //throw EmptyTransactionException("Cannot find transaction.")
+        return HttpResponse.notModified()
+    }
+
+    //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"9b9aea08-0dc2-4720-b20c-00b0df6af8ce", "description":"new"}' http://localhost:8080/transaction/update/9b9aea08-0dc2-4720-b20c-00b0df6af8ce
+    //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"a064b942-1e78-4913-adb3-b992fc1b4dd3","sha256":"","accountType":"credit","accountNameOwner":"discover_brian","description":"Last Updated","category":"","notes":"","cleared":0,"reoccurring":false,"amount":"0.00","transactionDate":1512730594,"dateUpdated":1487332021,"dateAdded":1487332021}' http://localhost:8080/transaction/update/a064b942-1e78-4913-adb3-b992fc1b4dd3
+    //@PatchMapping(path = [("/update/{guid}")], consumes = [("application/json-patch+json")], produces = [("application/json")])
+    @Patch("/update")
+    fun updateTransaction(@Body transaction: Map<String, String>): HttpResponse<String> {
+        val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
+        //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
+        val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
+        if (updateStatus) {
+            return HttpResponse.ok("transaction patched")
+        }
+        return HttpResponse.notFound()
+    }
+
+    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
+    //@PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
+    @Post("/insert")
+    fun insertTransaction(@Body transaction: Transaction): HttpResponse<String> {
+        logger.info("insert - transaction.transactionDate: ${transaction}")
+        if (transactionService.insertTransaction(transaction)) {
+            logger.info(transaction.toString())
+            return HttpResponse.ok("transaction inserted")
+        }
+        return HttpResponse.notFound()
+    }
+
+    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
+    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
+    //@DeleteMapping(path = ["/delete/{guid}"])
+    @Delete("/delete/{guid}")
+    fun deleteTransaction(@PathVariable("guid") guid: String): HttpResponse<String> {
+        val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
+        if (transactionOption.isPresent) {
+            if (transactionService.deleteByGuid(guid)) {
+                return HttpResponse.ok("resource deleted")
+            }
+            //throw EmptyTransactionException("transaction not deleted: $guid")
+            return HttpResponse.notModified()
+        }
+        //throw EmptyTransactionException("Cannot find transaction during delete: $guid")
+        return HttpResponse.notModified()
+    }
+
+//    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
+//    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"amount":"abc"}'
+//    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
+//    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+//        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
+//        IllegalArgumentException::class, DataIntegrityViolationException::class])
+//    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
+//        val response: MutableMap<String, String> = HashMap()
+//        logger.info("Bad Request: ", throwable)
+//        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+//        logger.info(response.toString())
+//        return response
+//    }
+//
+//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+//    @ExceptionHandler(value = [Exception::class])
+//    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
+//        val response: MutableMap<String, String> = HashMap()
+//        logger.error("internal server error: ", throwable)
+//        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+//        logger.info("response: $response")
+//        return response
+//    }
+//
+//    @ResponseStatus(HttpStatus.NOT_FOUND)
+//    @ExceptionHandler(value = [EmptyTransactionException::class])
+//    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
+//        val response: MutableMap<String, String> = HashMap()
+//        logger.error("not found: ", throwable)
+//        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+//        return response
+//    }
+
+    companion object {
+        private val mapper = ObjectMapper()
     }
 }

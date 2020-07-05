@@ -1,10 +1,10 @@
 micronaut:
   server:
-    port: 8081
+    port: 8080
+    cors:
+      enabled: true
   application:
     name: raspi-finance-enpoint-micro
-
-
 datasources:
   default:
     url: jdbc:postgresql://hornsup:5432/finance_db
@@ -20,6 +20,8 @@ datasources:
 #      hibernate:
 #        bytecode:
 #          provider: none
+
+# micronaut.server.cors.single-header: true
 
 jpa:
   default:

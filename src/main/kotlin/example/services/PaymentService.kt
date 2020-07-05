@@ -6,7 +6,9 @@ import example.repositories.PaymentRepository
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PaymentService(@Inject val paymentRepository: PaymentRepository) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)

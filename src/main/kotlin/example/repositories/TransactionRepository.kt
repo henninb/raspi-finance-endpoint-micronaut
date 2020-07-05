@@ -37,7 +37,7 @@ interface TransactionRepository : CrudRepository<Transaction, Long> {
 
     @Query(value = "SELECT EXTRACT(TIMEZONE FROM now())/3600.0", nativeQuery = true)
     fun selectTimeZoneOffset(): Int
-    
+
     @Query(value = "SELECT * FROM t_transaction_categories WHERE transaction_id =?", nativeQuery = true)
     fun selectFromTransactionCategories(transactionId: Long): List<Long>
 }
