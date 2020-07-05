@@ -3,19 +3,23 @@ package example.services
 import example.domain.Category
 import example.repositories.CategoryRepository
 import example.repositories.TransactionRepository
+import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class CategoryService(@Inject val categoryRepository: CategoryRepository) {
+    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertCategory(category: Category): Boolean {
-        val categoryOptional = findByCategory(category.category)
-        if( !categoryOptional.isPresent ) {
-            categoryRepository.save(category)
-        }
+        categoryRepository.save(category)
         return true
+    }
+
+    fun deleteByCategory(categoryName: String) {
+        logger.info("deleteByCategory")
+        categoryRepository.deleteByCategory(categoryName)
     }
 
     fun findByCategory(categoryName: String): Optional<Category> {
@@ -25,5 +29,4 @@ class CategoryService(@Inject val categoryRepository: CategoryRepository) {
         }
         return Optional.empty()
     }
-
 }

@@ -10,7 +10,7 @@ import javax.validation.constraints.Size
 
 @Entity
 @Proxy(lazy = false)
-//@Table(name = "t_category")
+@Table(name = "t_category")
 data class Category(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

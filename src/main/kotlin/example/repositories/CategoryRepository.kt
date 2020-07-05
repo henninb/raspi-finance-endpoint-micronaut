@@ -9,4 +9,5 @@ import java.util.*
 @Repository
 interface CategoryRepository : CrudRepository<Category, Long> {
     fun findByCategory(category: String): Optional<Category>
+    fun deleteByCategory(categoryName: String)
 }

@@ -24,7 +24,7 @@ import javax.validation.constraints.*
 
 @Entity
 @Proxy(lazy = false)
-//@Table(name = "t_transaction")
+@Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Transaction(
 //TODO: the field activeStatus
@@ -74,7 +74,7 @@ data class Transaction(
         var amount: BigDecimal,
 
         @JsonProperty
-        @field:Min(value = -3)
+        @field:Min(value = -1)
         @field:Max(value = 1)
         @Column(name = "cleared")
         var cleared: Int,
@@ -92,6 +92,7 @@ data class Transaction(
         var dateUpdated: Timestamp,
 
         @JsonProperty
+        //TODO: added this back in
         //@field:ValidTimestamp
         var dateAdded: Timestamp,
 
@@ -127,9 +128,9 @@ data class Transaction(
     var account: Account? = null
 
     @ManyToMany
-//    @JoinTable(name = "t_transaction_categories",
-//            joinColumns = [JoinColumn(name = "transactionId")],
-//            inverseJoinColumns = [JoinColumn(name = "categoryId")])
+    @JoinTable(name = "t_transaction_categories",
+            joinColumns = [JoinColumn(name = "transactionId")],
+            inverseJoinColumns = [JoinColumn(name = "categoryId")])
     @JsonIgnore
     var categories = mutableListOf<Category>()
 

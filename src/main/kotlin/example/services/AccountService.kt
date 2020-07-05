@@ -2,6 +2,7 @@ package example.services
 
 import example.domain.Account
 import example.repositories.AccountRepository
+import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -10,24 +11,68 @@ import javax.validation.Validator
 
 @Singleton
 class AccountService(@Inject val accountRepository: AccountRepository, @Inject val validator: Validator) {
+    private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
+        return accountRepository.findByAccountNameOwner(accountNameOwner)
+    }
+
+    fun findAllActiveAccounts(): List<Account> {
+        val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
+        if (accounts.isEmpty()) {
+            logger.warn("findAllActiveAccounts() - no accounts found.")
+        } else {
+            logger.info("findAllActiveAccounts() - found accounts.")
+        }
+        return accounts
+    }
+
+    fun selectTotals(): Double {
+        return accountRepository.selectTotals()
+    }
+
+    fun selectTotalsCleared(): Double {
+        return accountRepository.selectTotalsCleared()
+    }
+
     fun insertAccount(account: Account): Boolean {
+        val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
-        val accountNameOwnerOptional = findByAccountNameOwner(account.accountNameOwner)
         if (constraintViolations.isNotEmpty()) {
             //TODO: handle the violation
-            //logger.info("constraint issue.")
+            logger.info("constraint issue.")
             return false
         }
         //TODO: Should saveAndFlush be in a try catch block?
         //logger.info("INFO: transactionRepository.saveAndFlush call.")
-        if( !accountNameOwnerOptional.isPresent) {
+        if (!accountOptional.isPresent) {
             accountRepository.save(account)
         }
         //logger.info("INFO: transactionRepository.saveAndFlush success.")
         return true
     }
 
-    fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
-        return accountRepository.findByAccountNameOwner(accountNameOwner)
+    fun deleteByAccountNameOwner(accountNameOwner: String) {
+        accountRepository.deleteByAccountNameOwner(accountNameOwner)
+    }
+
+    fun updateAccountTotals() {
+        logger.info("updateAccountGrandTotals")
+        accountRepository.updateAccountGrandTotals()
+        logger.info("updateAccountClearedTotals")
+        accountRepository.updateAccountClearedTotals()
+        logger.info("updateAccountTotals")
+    }
+
+    //TODO: Complete the function
+    fun patchAccount(account: Account): Boolean {
+        val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
+        if (optionalAccount.isPresent) {
+            logger.info("patch the account.")
+            //var updateFlag = false
+            //val fromDb = optionalAccount.get()
+        }
+
+        return false
     }
 }

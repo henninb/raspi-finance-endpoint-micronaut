@@ -15,7 +15,7 @@ import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
 @Entity
-//@Table(name = "t_account")
+@Table(name = "t_account")
 @Proxy(lazy = false)
 data class Account(
         @Id
