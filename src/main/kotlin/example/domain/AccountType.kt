@@ -10,10 +10,11 @@ enum class AccountType {
 
     @JsonProperty("debit")
     Debit,
+
+    @JsonProperty("undefined")
     Undefined;
 
     override fun toString(): String {
-        println("toString - name: ${name.toLowerCase()}")
         return name.toLowerCase()
     }
 }

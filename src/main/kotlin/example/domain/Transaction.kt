@@ -127,7 +127,7 @@ data class Transaction(
     @JsonIgnore
     var account: Account? = null
 
-    @ManyToMany
+    @ManyToMany(cascade= [CascadeType.ALL])
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],
             inverseJoinColumns = [JoinColumn(name = "categoryId")])

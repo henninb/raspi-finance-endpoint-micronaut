@@ -8,6 +8,7 @@ import example.domain.Transaction
 import example.services.AccountService
 import example.services.CategoryService
 import example.services.TransactionService
+import io.micronaut.http.HttpRequest.PATCH
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
@@ -24,15 +25,6 @@ import javax.validation.ConstraintViolationException
 class TransactionController(@Inject val transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-//    @Get("/all")
-//    fun findAllTransactions(): MutableIterable<Transaction>? {
-//        val transactions: MutableIterable<Transaction> = transactionService.findAllTransactions()
-//        if (transactions.isEmpty()) {
-//            return HttpResponse.notFound()
-//        }
-//        return HttpResponse.ok(transactions)
-//    }
-
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
     @Get("/account/select/{accountNameOwner}")
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<List<Transaction>> {
@@ -46,7 +38,15 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     //curl http://localhost:8080/transaction/account/totals/chase_brian
     @Get("/account/totals/{accountNameOwner}")
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<String> {
-        val results: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
+        val results: MutableMap<String, BigDecimal> = HashMap()
+        var totalsCleared= 0.00
+        var totals = 0.00
+
+        results["totals"] = BigDecimal(totals)
+        results["totalsCleared"] = BigDecimal(totalsCleared)
+
+        //val results: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
+        //val results: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
 
         logger.info("totals=${results}")
 
@@ -73,32 +73,31 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"9b9aea08-0dc2-4720-b20c-00b0df6af8ce", "description":"new"}' http://localhost:8080/transaction/update/9b9aea08-0dc2-4720-b20c-00b0df6af8ce
     //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"a064b942-1e78-4913-adb3-b992fc1b4dd3","sha256":"","accountType":"credit","accountNameOwner":"discover_brian","description":"Last Updated","category":"","notes":"","cleared":0,"reoccurring":false,"amount":"0.00","transactionDate":1512730594,"dateUpdated":1487332021,"dateAdded":1487332021}' http://localhost:8080/transaction/update/a064b942-1e78-4913-adb3-b992fc1b4dd3
     //@PatchMapping(path = [("/update/{guid}")], consumes = [("application/json-patch+json")], produces = [("application/json")])
-    @Patch("/update")
-    fun updateTransaction(@Body transaction: Map<String, String>): HttpResponse<String> {
+    @Patch("/update/{guid}")
+    @Consumes("application/json-patch+json")
+    fun updateTransaction(@PathVariable("guid") guid: String, @Body transaction: Map<String, String>): HttpResponse<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
-        //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
         val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
         if (updateStatus) {
             return HttpResponse.ok("transaction patched")
         }
-        return HttpResponse.notFound()
+        return HttpResponse.badRequest("cannot patch transaction $transaction")
     }
 
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     //@PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
     @Post("/insert")
     fun insertTransaction(@Body transaction: Transaction): HttpResponse<String> {
-        logger.info("insert - transaction.transactionDate: ${transaction}")
+        logger.info("insert - transaction.transactionDate: $transaction")
         if (transactionService.insertTransaction(transaction)) {
             logger.info(transaction.toString())
             return HttpResponse.ok("transaction inserted")
         }
-        return HttpResponse.notFound()
+        return HttpResponse.badRequest("cannot insert transaction $transaction")
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
-    //@DeleteMapping(path = ["/delete/{guid}"])
     @Delete("/delete/{guid}")
     fun deleteTransaction(@PathVariable("guid") guid: String): HttpResponse<String> {
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
@@ -106,11 +105,9 @@ class TransactionController(@Inject val transactionService: TransactionService) 
             if (transactionService.deleteByGuid(guid)) {
                 return HttpResponse.ok("resource deleted")
             }
-            //throw EmptyTransactionException("transaction not deleted: $guid")
-            return HttpResponse.notModified()
+            return HttpResponse.badRequest("cannot delete transaction guild = $guid.")
         }
-        //throw EmptyTransactionException("Cannot find transaction during delete: $guid")
-        return HttpResponse.notModified()
+        return HttpResponse.badRequest("cannot delete transaction guild = $guid, transaction not present.")
     }
 
 //    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'

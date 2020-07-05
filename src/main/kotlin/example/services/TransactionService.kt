@@ -11,11 +11,12 @@ import java.sql.Timestamp
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import javax.transaction.Transactional
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 @Singleton
-class TransactionService(@Inject val transactionRepository: TransactionRepository,
+open class TransactionService(@Inject val transactionRepository: TransactionRepository,
                          @Inject val validator: Validator,
                          @Inject val categoryService: CategoryService,
                          @Inject val accountService: AccountService) {
@@ -26,22 +27,24 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
         return transactionRepository.findAll()
     }
 
-    fun deleteByIdFromTransactionCategories(transactionId: Long): Boolean {
-        transactionRepository.deleteByIdFromTransactionCategories(transactionId)
-        return true
-    }
-
-    fun deleteByGuid(guid: String): Boolean {
+    @Transactional
+    open fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
-            transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
+            //transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
+            val transaction = transactionOptional.get()
+            println("transaction.categories = ${transaction.categories}")
+            if (transaction.categories.size > 0) {
+                //transaction.categories.remove()
+            }
             transactionRepository.deleteByGuid(guid)
             return true
         }
         return false
     }
 
-    fun insertTransaction(transaction: Transaction): Boolean {
+    @Transactional
+    open fun insertTransaction(transaction: Transaction): Boolean {
 
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
@@ -58,7 +61,7 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
 
         processAccount(transaction)
         processCategory(transaction)
-        println("transaction = ${transaction}")
+        println("transaction = $transaction")
         transactionRepository.save(transaction)
         logger.info("*** inserted transaction ***")
         return true
@@ -176,7 +179,9 @@ class TransactionService(@Inject val transactionRepository: TransactionRepositor
         return transactions
     }
 
-    fun patchTransaction(transaction: Transaction): Boolean {
+    //TODO: Does not work yet
+    @Transactional
+    open fun patchTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.info("patchTransaction() ConstraintViolation.")
