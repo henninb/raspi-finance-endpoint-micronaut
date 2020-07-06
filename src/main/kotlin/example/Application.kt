@@ -10,7 +10,7 @@ import io.micronaut.runtime.Micronaut
 //		.start()
 //}
 
-
+//@EnableTransactionManagement
 open class Application {
     companion object {
         @JvmStatic

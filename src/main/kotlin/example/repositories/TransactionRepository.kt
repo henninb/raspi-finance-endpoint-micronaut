@@ -6,7 +6,6 @@ import io.micronaut.data.annotation.Repository
 import io.micronaut.data.repository.CrudRepository
 import java.math.BigDecimal
 import java.util.*
-import javax.transaction.Transactional
 
 @Repository
 interface TransactionRepository : CrudRepository<Transaction, Long> {

@@ -2,7 +2,6 @@ package example.services
 
 import example.domain.Category
 import example.repositories.CategoryRepository
-import example.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject

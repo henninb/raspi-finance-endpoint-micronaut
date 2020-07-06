@@ -1,25 +1,14 @@
 package example.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import example.domain.Account
-import example.domain.AccountType
-import example.domain.Category
 import example.domain.Transaction
-import example.services.AccountService
-import example.services.CategoryService
 import example.services.TransactionService
-import io.micronaut.http.HttpRequest.PATCH
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.math.RoundingMode
-import java.sql.Date
-import java.sql.Timestamp
 import java.util.*
 import javax.inject.Inject
-import javax.validation.ConstraintViolationException
 
 @Controller("/transaction")
 class TransactionController(@Inject val transactionService: TransactionService) {
@@ -39,7 +28,7 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     @Get("/account/totals/{accountNameOwner}")
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<String> {
         val results: MutableMap<String, BigDecimal> = HashMap()
-        var totalsCleared= 0.00
+        var totalsCleared = 0.00
         var totals = 0.00
 
         results["totals"] = BigDecimal(totals)

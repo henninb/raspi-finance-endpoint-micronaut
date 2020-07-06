@@ -1,7 +1,6 @@
 package example.services
 
 import example.domain.Payment
-import example.repositories.CategoryRepository
 import example.repositories.PaymentRepository
 import org.slf4j.LoggerFactory
 import java.util.*

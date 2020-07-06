@@ -17,15 +17,31 @@ import javax.validation.Validator
 
 @Singleton
 open class TransactionService(@Inject val transactionRepository: TransactionRepository,
-                         @Inject val validator: Validator,
-                         @Inject val categoryService: CategoryService,
-                         @Inject val accountService: AccountService) {
+                              @Inject val accountService: AccountService,
+                              @Inject val categoryService: CategoryService,
+                              @Inject val validator: Validator) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findAllTransactions(): MutableIterable<Transaction> {
         return transactionRepository.findAll()
     }
+
+
+//    open fun deleteByGuid(guid: String): Boolean {
+//        val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
+//        if (transactionOptional.isPresent) {
+//            //transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
+//            val transaction = transactionOptional.get()
+//            println("transaction.categories = ${transaction.categories}")
+//            if (transaction.categories.size > 0) {
+//                //transaction.categories.remove()
+//            }
+//            transactionRepository.deleteByGuid(guid)
+//            return true
+//        }
+//        return false
+//    }
 
     @Transactional
     open fun deleteByGuid(guid: String): Boolean {
@@ -35,13 +51,16 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
             val transaction = transactionOptional.get()
             println("transaction.categories = ${transaction.categories}")
             if (transaction.categories.size > 0) {
-                //transaction.categories.remove()
+                println("transaction.categories = ${transaction.categories}")
+                transaction.categories.removeIf { t: Category -> t.category == transaction.category }
+                println("here foo")
             }
             transactionRepository.deleteByGuid(guid)
             return true
         }
         return false
     }
+
 
     @Transactional
     open fun insertTransaction(transaction: Transaction): Boolean {
@@ -154,13 +173,13 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
     fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
-        var totalsCleared= 0.00
+        var totalsCleared = 0.00
         var totals = 0.00
 
         //TODO: Fix this
         //try {
-            totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
-            totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+        totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
+        totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
         //} catch( e: EmptyResultDataAccessException) {
         //    logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
         //}
@@ -192,7 +211,7 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
             val fromDb = optionalTransaction.get()
             if (fromDb.guid == transaction.guid) {
                 logger.info("successful patch $transaction")
-                transactionRepository.save(transaction)
+                transactionRepository.update(transaction)
             } else {
                 logger.warn("GUID did not match any database records.")
                 return false

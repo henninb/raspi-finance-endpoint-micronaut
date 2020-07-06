@@ -1,6 +1,7 @@
 package example.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import example.utils.AccountTypeConverter
@@ -17,6 +18,7 @@ import javax.validation.constraints.Size
 @Entity
 @Table(name = "t_account")
 @Proxy(lazy = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Account(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

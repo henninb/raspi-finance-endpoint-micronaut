@@ -121,13 +121,13 @@ data class Transaction(
         return (this.dateAdded.time / 1000)
     }
 
-//    //TODO: camel case or snake case?
+    //    //TODO: camel case or snake case?
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
 
-    @ManyToMany(cascade= [CascadeType.ALL])
+    @ManyToMany(cascade = [CascadeType.ALL])
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],
             inverseJoinColumns = [JoinColumn(name = "categoryId")])

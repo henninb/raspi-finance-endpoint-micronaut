@@ -9,7 +9,6 @@ import io.micronaut.http.annotation.*
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject
-import javax.validation.ConstraintViolationException
 
 @Controller("/account")
 class AccountController(@Inject val accountService: AccountService) {

@@ -1,6 +1,7 @@
 package example.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Proxy
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size
 @Entity
 @Proxy(lazy = false)
 @Table(name = "t_category")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Category(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
