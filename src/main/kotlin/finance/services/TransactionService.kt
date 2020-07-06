@@ -198,8 +198,8 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
         return transactions
     }
 
-    //TODO: Does not work yet
-    @Transactional
+
+    //@Transactional
     open fun patchTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {

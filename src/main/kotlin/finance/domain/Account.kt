@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants
+import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -57,11 +58,11 @@ data class Account(
         var dateClosed: Timestamp,
 
         @JsonProperty
-        //@ValidTimestamp
+        @ValidTimestamp
         var dateUpdated: Timestamp,
 
         @JsonProperty
-        //@ValidTimestamp
+        @ValidTimestamp
         var dateAdded: Timestamp) {
 
     constructor() : this(0L, "", AccountType.Credit, true,

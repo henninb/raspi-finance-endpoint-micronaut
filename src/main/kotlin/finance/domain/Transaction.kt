@@ -15,6 +15,8 @@ import finance.utils.Constants.MUST_BE_ASCII_MESSAGE
 import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
+import finance.utils.ValidDate
+import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
@@ -54,7 +56,7 @@ data class Transaction(
         @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
         var accountNameOwner: String,
 
-        //@field:ValidDate
+        @field:ValidDate
         @Column(columnDefinition = "DATE")
         @JsonProperty
         var transactionDate: Date,
@@ -88,12 +90,12 @@ data class Transaction(
         var notes: String,
 
         @JsonProperty
-        //@field:ValidTimestamp
+        @field:ValidTimestamp
         var dateUpdated: Timestamp,
 
         @JsonProperty
         //TODO: added this back in
-        //@field:ValidTimestamp
+        @field:ValidTimestamp
         var dateAdded: Timestamp,
 
         //TODO: remove this field as it is not required.
@@ -127,7 +129,9 @@ data class Transaction(
     @JsonIgnore
     var account: Account? = null
 
-    @ManyToMany(cascade = [CascadeType.ALL])
+    //ON DELETE CASCADE
+    //, orphanRemoval = true
+    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],
             inverseJoinColumns = [JoinColumn(name = "categoryId")])
