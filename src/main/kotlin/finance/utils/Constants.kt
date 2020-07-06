@@ -1,4 +1,4 @@
-package example.utils
+package finance.utils
 
 object Constants {
 

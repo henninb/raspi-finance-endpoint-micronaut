@@ -1,7 +1,7 @@
-package example.controllers
+package finance.controllers
 
-import example.domain.Payment
-import example.services.PaymentService
+import finance.domain.Payment
+import finance.services.PaymentService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
 import io.micronaut.http.annotation.*

@@ -1,4 +1,4 @@
-package example
+package finance
 
 import io.micronaut.runtime.Micronaut
 

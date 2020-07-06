@@ -1,6 +1,6 @@
-package example.repositories
+package finance.repositories
 
-import example.domain.Account
+import finance.domain.Account
 import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.repository.CrudRepository

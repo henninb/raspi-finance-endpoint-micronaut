@@ -1,7 +1,7 @@
-package example.services
+package finance.services
 
-import example.domain.Payment
-import example.repositories.PaymentRepository
+import finance.domain.Payment
+import finance.repositories.PaymentRepository
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject

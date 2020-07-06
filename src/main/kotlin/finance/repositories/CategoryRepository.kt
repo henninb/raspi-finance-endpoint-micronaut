@@ -1,6 +1,6 @@
-package example.repositories
+package finance.repositories
 
-import example.domain.Category
+import finance.domain.Category
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.repository.CrudRepository
 import java.util.*

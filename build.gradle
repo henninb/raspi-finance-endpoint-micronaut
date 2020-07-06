@@ -8,7 +8,7 @@ plugins {
 }
 
 version "0.1"
-group "example"
+group "finance"
 
 repositories {
     mavenCentral()
@@ -75,7 +75,7 @@ dependencies {
 
 test.classpath += configurations.developmentOnly
 
-mainClassName = "example.Application"
+mainClassName = "finance.Application"
 
 // use JUnit 5 platform
 test {

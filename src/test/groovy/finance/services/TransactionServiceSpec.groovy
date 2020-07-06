@@ -1,11 +1,11 @@
-package example.services
+package finance.services
 
-import example.domain.Account
-import example.domain.Category
-import example.domain.Transaction
-import example.repositories.AccountRepository
-import example.repositories.CategoryRepository
-import example.repositories.TransactionRepository
+import finance.domain.Account
+import finance.domain.Category
+import finance.domain.Transaction
+import finance.repositories.AccountRepository
+import finance.repositories.CategoryRepository
+import finance.repositories.TransactionRepository
 import spock.lang.Specification
 
 import javax.validation.Validator

@@ -1,8 +1,8 @@
-package example.controllers
+package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import example.domain.Transaction
-import example.services.TransactionService
+import finance.domain.Transaction
+import finance.services.TransactionService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import org.slf4j.LoggerFactory

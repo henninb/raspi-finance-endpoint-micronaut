@@ -1,4 +1,4 @@
-package example.domain
+package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty

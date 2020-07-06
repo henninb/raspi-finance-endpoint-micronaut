@@ -1,11 +1,11 @@
-package example.domain
+package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import example.utils.AccountTypeConverter
-import example.utils.Constants
+import finance.utils.AccountTypeConverter
+import finance.utils.Constants
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp

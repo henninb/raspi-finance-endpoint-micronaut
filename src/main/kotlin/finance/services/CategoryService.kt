@@ -1,7 +1,7 @@
-package example.services
+package finance.services
 
-import example.domain.Category
-import example.repositories.CategoryRepository
+import finance.domain.Category
+import finance.repositories.CategoryRepository
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject

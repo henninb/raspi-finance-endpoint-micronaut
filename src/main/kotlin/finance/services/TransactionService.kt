@@ -1,10 +1,10 @@
-package example.services
+package finance.services
 
-import example.domain.Account
-import example.domain.AccountType
-import example.domain.Category
-import example.domain.Transaction
-import example.repositories.TransactionRepository
+import finance.domain.Account
+import finance.domain.AccountType
+import finance.domain.Category
+import finance.domain.Transaction
+import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -51,7 +51,7 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
             val transaction = transactionOptional.get()
             println("transaction.categories = ${transaction.categories}")
             if (transaction.categories.size > 0) {
-                println("transaction.categories = ${transaction.categories}")
+                println("transaction.categories = $transaction.categories")
                 transaction.categories.removeIf { t: Category -> t.category == transaction.category }
                 println("here foo")
             }

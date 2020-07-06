@@ -1,4 +1,4 @@
-package example.domain
+package finance.domain
 
 //import example.utils.ValidDate
 //import example.utils.ValidTimestamp
@@ -7,14 +7,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import example.utils.AccountTypeConverter
-import example.utils.Constants.ALPHA_UNDERSCORE_PATTERN
-import example.utils.Constants.ASCII_PATTERN
-import example.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
-import example.utils.Constants.MUST_BE_ASCII_MESSAGE
-import example.utils.Constants.MUST_BE_DOLLAR_MESSAGE
-import example.utils.Constants.MUST_BE_UUID_MESSAGE
-import example.utils.Constants.UUID_PATTERN
+import finance.utils.AccountTypeConverter
+import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
+import finance.utils.Constants.ASCII_PATTERN
+import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
+import finance.utils.Constants.MUST_BE_ASCII_MESSAGE
+import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
+import finance.utils.Constants.MUST_BE_UUID_MESSAGE
+import finance.utils.Constants.UUID_PATTERN
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date

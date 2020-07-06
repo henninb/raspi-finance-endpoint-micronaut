@@ -1,8 +1,8 @@
-package example.controllers
+package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import example.domain.Account
-import example.services.AccountService
+import finance.domain.Account
+import finance.services.AccountService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
