@@ -41,19 +41,19 @@ class AccountController(@Inject val accountService: AccountService) {
         return HttpResponse.ok(accounts)
     }
 
-    @Get("/select/totals")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun selectAccountTotals(): HttpResponse<List<Account>> {
-        //TODO: fix
-        //accountService.updateAccountTotals()
-        val accounts: List<Account> = accountService.findAllActiveAccounts()
-        if (accounts.isEmpty()) {
-            logger.info("no accounts found.")
-            return HttpResponse.notFound()
-        }
-        logger.info("select active accounts: ${accounts.size}")
-        return HttpResponse.ok(accounts)
-    }
+//    @Get("/select/totals")
+//    @Produces(MediaType.APPLICATION_JSON)
+//    fun selectAccountTotals(): HttpResponse<List<Account>> {
+//        //TODO: fix
+//        //accountService.updateAccountTotals()
+//        val accounts: List<Account> = accountService.findAllActiveAccounts()
+//        if (accounts.isEmpty()) {
+//            logger.info("no accounts found.")
+//            return HttpResponse.notFound()
+//        }
+//        logger.info("select active accounts: ${accounts.size}")
+//        return HttpResponse.ok(accounts)
+//    }
 
     @Get("/select/{accountNameOwner}")
     @Produces(MediaType.APPLICATION_JSON)
