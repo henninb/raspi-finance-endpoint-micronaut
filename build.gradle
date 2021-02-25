@@ -69,18 +69,17 @@ java {
 allOpen {
     annotation("io.micronaut.aop.Around")
 }
+
 compileKotlin {
-    kotlinOptions {
-        jvmTarget = '1.8'
-        //Will retain parameter names for Java reflection
-        javaParameters = true
-    }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_11
 }
+
 compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = '1.8'
-        javaParameters = true
-    }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_11
 }
 kapt {
     arguments {
