@@ -27,22 +27,6 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
         return transactionRepository.findAll()
     }
 
-
-//    open fun deleteByGuid(guid: String): Boolean {
-//        val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
-//        if (transactionOptional.isPresent) {
-//            //transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
-//            val transaction = transactionOptional.get()
-//            println("transaction.categories = ${transaction.categories}")
-//            if (transaction.categories.size > 0) {
-//                //transaction.categories.remove()
-//            }
-//            transactionRepository.deleteByGuid(guid)
-//            return true
-//        }
-//        return false
-//    }
-
     @Transactional
     open fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
@@ -75,7 +59,7 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
         if (transactionOptional.isPresent) {
             val transactionDb = transactionOptional.get()
             logger.info("*** update transaction ***")
-            return updateTransaction(transactionDb, transaction)
+            //return updateTransaction(transactionDb, transaction)
         }
 
         processAccount(transaction)
@@ -120,28 +104,6 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
         }
     }
 
-    private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {
-        if (transactionDb.accountNameOwner.trim() == transaction.accountNameOwner) {
-
-            if (transactionDb.amount != transaction.amount) {
-                logger.info("discrepancy in the amount for <${transactionDb.guid}>")
-                //TODO: metric for this
-                transactionRepository.setAmountByGuid(transaction.amount, transaction.guid)
-                return true
-            }
-
-            if (transactionDb.transactionState != transaction.transactionState) {
-                logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
-                //TODO: metric for this
-                //transactionRepository.setClearedByGuid(transaction.transactionState.cl, transaction.guid)
-                return true
-            }
-        }
-
-        logger.info("transaction already exists, no transaction data inserted.")
-        return false
-    }
-
     private fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
@@ -170,27 +132,27 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
         return Optional.empty()
     }
 
-    fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
-
-        val result: MutableMap<String, BigDecimal> = HashMap()
-        var totalsCleared = 0.00
-        var totals = 0.00
-
-        //TODO: Fix this
-        //try {
-        totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
-        totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
-        //} catch( e: EmptyResultDataAccessException) {
-        //    logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
-        //}
-
-        result["totals"] = BigDecimal(totals)
-        result["totalsCleared"] = BigDecimal(totalsCleared)
-        return result
-    }
+//    fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+//
+//        val result: MutableMap<String, BigDecimal> = HashMap()
+//        var totalsCleared = 0.00
+//        var totals = 0.00
+//
+//        //TODO: Fix this
+//        //try {
+//        totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
+//        totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+//        //} catch( e: EmptyResultDataAccessException) {
+//        //    logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
+//        //}
+//
+//        result["totals"] = BigDecimal(totals)
+//        result["totalsCleared"] = BigDecimal(totalsCleared)
+//        return result
+//    }
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
-        val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
+        val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true)
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //return something

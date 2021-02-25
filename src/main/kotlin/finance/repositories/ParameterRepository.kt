@@ -1,15 +1,15 @@
 package finance.repositories
 
-import finance.domain.Payment
+import finance.domain.Parameter
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
 import java.util.*
 import javax.transaction.Transactional
 
 @Repository
-interface PaymentRepository : JpaRepository<Payment, Long> {
-    fun findByPaymentId(paymentId: Long): Optional<Payment>
+interface ParameterRepository : JpaRepository<Parameter, Long> {
+    fun findByParameterName(parameterName: String): Optional<Parameter>
 
     @Transactional
-    fun deleteByPaymentId(paymentId: Long)
+    fun deleteByParameterName(parameterName: String)
 }

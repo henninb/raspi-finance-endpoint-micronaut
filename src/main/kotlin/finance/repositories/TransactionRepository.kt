@@ -1,39 +1,30 @@
 package finance.repositories
 
 import finance.domain.Transaction
-import io.micronaut.data.annotation.Query
+import finance.domain.TransactionState
 import io.micronaut.data.annotation.Repository
-import io.micronaut.data.repository.CrudRepository
-import java.math.BigDecimal
+import io.micronaut.data.jpa.repository.JpaRepository
 import java.util.*
+import javax.transaction.Transactional
 
 @Repository
-interface TransactionRepository : CrudRepository<Transaction, Long> {
-
-    //TODO: add LIMIT 1 result
+interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun findByGuid(guid: String): Optional<Transaction>
-    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
 
-    @Query("UPDATE #{#entityName} set amount = ?1 WHERE guid = ?2")
-    fun setAmountByGuid(amount: BigDecimal, guild: String)
-
-    @Query("UPDATE #{#entityName} set cleared = ?1 WHERE guid = ?2")
-    fun setClearedByGuid(cleared: Int, guild: String)
-
-    @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE cleared = 1 AND accountNameOwner=?1")
-    //@Query(value = "SELECT SUM(amount) AS totals t_transaction WHERE cleared = 1 AND account_name_owner=?1", nativeQuery = true)
-    fun getTotalsByAccountNameOwnerCleared(accountNameOwner: String): Double
-
-    // Using SpEL expression
-    @Query("SELECT SUM(amount) as totals FROM #{#entityName} WHERE accountNameOwner=?1")
-    fun getTotalsByAccountNameOwner(accountNameOwner: String): Double
-
-    //@Query(value = "DELETE FROM t_transaction WHERE guid = ?1", nativeQuery = true)
+    @Transactional
     fun deleteByGuid(guid: String)
 
-    @Query(value = "DELETE FROM t_transaction_categories WHERE transaction_id = ?1", nativeQuery = true)
-    fun deleteByIdFromTransactionCategories(transactionId: Long)
+    fun findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(
+        accountNameOwner: String,
+        activeStatus: Boolean = true
+    ): List<Transaction>
 
-    @Query(value = "SELECT * FROM t_transaction_categories WHERE transaction_id =?", nativeQuery = true)
-    fun selectFromTransactionCategories(transactionId: Long): List<Long>
+    fun findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
+        accountNameOwner: String,
+        activeStatus: Boolean = true,
+        transactionStates: List<TransactionState>
+    ): List<Transaction>
+
+    //SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction
+    //fun sumAmountBy
 }

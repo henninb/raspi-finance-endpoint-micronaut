@@ -27,13 +27,13 @@ class AccountService(@Inject val accountRepository: AccountRepository, @Inject v
         return accounts
     }
 
-    fun selectTotals(): Double {
-        return accountRepository.selectTotals()
-    }
-
-    fun selectTotalsCleared(): Double {
-        return accountRepository.selectTotalsCleared()
-    }
+//    fun selectTotals(): Double {
+//        return accountRepository.selectTotals()
+//    }
+//
+//    fun selectTotalsCleared(): Double {
+//        return accountRepository.selectTotalsCleared()
+//    }
 
     fun insertAccount(account: Account): Boolean {
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
@@ -56,13 +56,13 @@ class AccountService(@Inject val accountRepository: AccountRepository, @Inject v
         accountRepository.deleteByAccountNameOwner(accountNameOwner)
     }
 
-    fun updateAccountTotals() {
-        logger.info("updateAccountGrandTotals")
-        accountRepository.updateAccountGrandTotals()
-        logger.info("updateAccountClearedTotals")
-        accountRepository.updateAccountClearedTotals()
-        logger.info("updateAccountTotals")
-    }
+//    fun updateAccountTotals() {
+//        logger.info("updateAccountGrandTotals")
+//        accountRepository.updateAccountGrandTotals()
+//        logger.info("updateAccountClearedTotals")
+//        accountRepository.updateAccountClearedTotals()
+//        logger.info("updateAccountTotals")
+//    }
 
     //TODO: Complete the function
     fun patchAccount(account: Account): Boolean {
