@@ -1,11 +1,11 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id "org.jetbrains.kotlin.kapt" version "1.4.10"
-    id "org.jetbrains.kotlin.plugin.allopen" version "1.4.10"
+    id "org.jetbrains.kotlin.jvm" version "$kotlinVersion"
+    id "org.jetbrains.kotlin.kapt" version "$kotlinVersion"
+    id "org.jetbrains.kotlin.plugin.allopen" version "$kotlinVersion"
     id "groovy"
     id "com.github.johnrengelman.shadow" version "6.1.0"
     id "application"
-    id "com.github.ben-manes.versions" version "0.33.0"
+    id "com.github.ben-manes.versions" version "$gradleVersionsPlugin"
 }
 
 version "0.1"
@@ -22,49 +22,28 @@ configurations {
 }
 
 dependencies {
-    kapt(platform("io.micronaut:micronaut-bom:2.1.1"))
+    kapt(platform("io.micronaut:micronaut-bom:$micronautVersion"))
     kapt("io.micronaut:micronaut-inject-java")
     kapt("io.micronaut:micronaut-validation")
-    implementation(platform("io.micronaut:micronaut-bom:2.1.1"))
+    implementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
     implementation("io.micronaut:micronaut-inject")
     implementation("io.micronaut:micronaut-validation")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.10")
-    implementation("io.micronaut.kotlin:micronaut-kotlin-runtime:2.1.1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    implementation("io.micronaut.kotlin:micronaut-kotlin-runtime:$micronautRuntimeVersion")
     implementation("io.micronaut:micronaut-runtime")
-    implementation("io.micronaut:micronaut-http-server-netty:2.1.1")
-    implementation("io.micronaut:micronaut-http-client:2.1.1")
-    //implementation("io.micronaut:micronaut-data-model:1.1.1")
-// https://mvnrepository.com/artifact/io.micronaut.data/micronaut-data-model
-    implementation("io.micronaut.data:micronaut-data-model:1.1.0")
-    implementation("io.micronaut.data:micronaut-data-hibernate-jpa:2.1.0")
+    implementation("io.micronaut:micronaut-http-server-netty:$micronautVersion")
+    implementation("io.micronaut:micronaut-http-client:$micronautVersion")
+    implementation("io.micronaut.data:micronaut-data-model:$micronautDataVersion")
+    implementation("io.micronaut.data:micronaut-data-hibernate-jpa:$micronautDataVersion")
 
-    kapt("io.micronaut.data:micronaut-data-processor:2.1.0")
-    //implementation("implementation 'io.micronaut.data:micronaut-data-hibernate-jpa:1.1.1")
-    //implementation("implementation 'io.micronaut.data:micronaut-data-hibernate-jpa")
-    // https://mvnrepository.com/artifact/io.micronaut.data/micronaut-data-hibernate-jpa
-    // compile group: 'io.micronaut.data', name: 'micronaut-data-hibernate-jpa', version: '1.1.0'
+    kapt("io.micronaut.data:micronaut-data-processor:$micronautDataVersion")
+    implementation("io.micronaut.data:micronaut-data-jdbc:$micronautDataVersion")
 
-
-    implementation("io.micronaut.data:micronaut-data-jdbc:2.1.0")
-
-
-
-//    api "org.hibernate:hibernate-core:5.4.17.Final", {
-//        //exclude group: "javax.persistence", module:"javax.persistence-api"
-//        //exclude group: 'org.jboss.spec.javax.transaction', module: 'jboss-transaction-api_1.2_spec'
-//        //exclude group: 'org.javassist', module: 'javassist'
-//        //exclude group: 'org.jboss:jandex', module: 'jar'
-//    }
-
-    //implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
-
-    //runtimeOnly("io.micronaut.configuration:micronaut-jdbc-tomcat")
     runtime "io.micronaut.configuration:micronaut-jdbc-tomcat:2.2.6"
-    //runtimeOnly "io.micronaut.configuration:micronaut-jdbc-hikari"
-    runtimeOnly "org.postgresql:postgresql:42.2.18"
+    runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
 
-    runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("ch.qos.logback:logback-classic:$logbackVersion")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
     testImplementation("io.micronaut:micronaut-inject-groovy")
