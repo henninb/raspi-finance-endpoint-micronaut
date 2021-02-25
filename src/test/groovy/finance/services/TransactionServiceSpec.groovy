@@ -34,7 +34,6 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-
     def "test transactionService - deleteByGuid - no record returned because of invalid guid"() {
         given:
         def guid = "123"

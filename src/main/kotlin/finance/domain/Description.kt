@@ -4,41 +4,36 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
-import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Min
-import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
-
 
 @Entity
 @Proxy(lazy = false)
-@Table(name = "t_category")
+@Table(name = "t_description")
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Category(
+data class Description(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "t_category_category_id_seq")
+    @SequenceGenerator(name = "t_description_description_id_seq")
     @field:Min(value = 0L)
     @JsonProperty
-    @Column(name = "category_id", nullable = false)
-    var categoryId: Long,
+    @Column(name = "description_id", nullable = false)
+    var descriptionId: Long,
 
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
     @field:Size(min = 1, max = 50)
-    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "category", unique = true, nullable = false)
+    @Column(name = "description", unique = true, nullable = false)
     @JsonProperty
-    var category: String
+    var description: String
 ) {
     constructor() : this(0L, true, "")
 

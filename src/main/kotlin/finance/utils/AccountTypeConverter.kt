@@ -16,10 +16,10 @@ class AccountTypeConverter : AttributeConverter<AccountType, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): AccountType {
-        return when (attribute.trim()) {
+        return when (attribute.trim().toLowerCase()) {
             "credit" -> AccountType.Credit
             "debit" -> AccountType.Debit
-            "unknown" -> AccountType.Undefined
+            "undefined" -> AccountType.Undefined
             else -> throw RuntimeException("Unknown attribute: $attribute")
         }
     }

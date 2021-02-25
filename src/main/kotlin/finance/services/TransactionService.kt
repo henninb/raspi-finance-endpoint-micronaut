@@ -130,10 +130,10 @@ open class TransactionService(@Inject val transactionRepository: TransactionRepo
                 return true
             }
 
-            if (transactionDb.cleared != transaction.cleared) {
+            if (transactionDb.transactionState != transaction.transactionState) {
                 logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
                 //TODO: metric for this
-                transactionRepository.setClearedByGuid(transaction.cleared, transaction.guid)
+                //transactionRepository.setClearedByGuid(transaction.transactionState.cl, transaction.guid)
                 return true
             }
         }

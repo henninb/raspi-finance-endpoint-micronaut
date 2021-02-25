@@ -4,20 +4,24 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class TransactionState {
-    @JsonProperty("future")
-    Future,
-
+enum class TransactionState(val state: String) {
     @JsonProperty("cleared")
-    Cleared,
+    Cleared("cleared"),
 
     @JsonProperty("outstanding")
-    Outstanding,
+    Outstanding("outstanding"),
+
+    @JsonProperty("future")
+    Future("future"),
 
     @JsonProperty("undefined")
-    Undefined;
+    Undefined("undefined");
 
-    override fun toString(): String {
-        return name.toLowerCase()
+    fun value(): String = state
+    override fun toString(): String = name.toLowerCase()
+
+    companion object {
+        private val VALUES = values()
+        fun getByValue(state: String) = VALUES.firstOrNull { it.state == state }
     }
 }
