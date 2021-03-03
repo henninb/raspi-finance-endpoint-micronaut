@@ -5,6 +5,9 @@ micronaut:
       enabled: true
   application:
     name: raspi-finance-enpoint-micronaut
+  metrics:
+    enabled: true
+
 datasources:
   default:
     url: jdbc:postgresql://hornsup:5432/finance_db

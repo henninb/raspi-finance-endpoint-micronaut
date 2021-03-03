@@ -19,7 +19,9 @@ import javax.validation.Validator
 open class TransactionService(@Inject val transactionRepository: TransactionRepository,
                               @Inject val accountService: AccountService,
                               @Inject val categoryService: CategoryService,
-                              @Inject val validator: Validator) {
+                              @Inject val receiptImageService: ReceiptImageService,
+                              @Inject val validator: Validator,
+                              @Inject val meterService: MeterService) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 

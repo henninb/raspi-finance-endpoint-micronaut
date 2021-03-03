@@ -6,9 +6,17 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import javax.validation.Validator
+
+//(paymentRepositoryMock, transactionService, accountService, parameterService, validatorMock, meterService)
 
 @Singleton
-class PaymentService(@Inject val paymentRepository: PaymentRepository) {
+class PaymentService(@Inject val paymentRepository: PaymentRepository,
+                     @Inject val transactionService: TransactionService,
+                     @Inject val accountService: AccountService,
+                     @Inject val parameterService: ParameterService,
+                     @Inject val validator: Validator,
+                     @Inject val meterService: MeterService) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 

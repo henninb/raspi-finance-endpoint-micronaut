@@ -2,6 +2,7 @@ package finance.services
 
 import finance.domain.Account
 import finance.repositories.AccountRepository
+import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.inject.Inject
@@ -9,8 +10,11 @@ import javax.inject.Singleton
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
+
+//protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
+
 @Singleton
-class AccountService(@Inject val accountRepository: AccountRepository, @Inject val validator: Validator) {
+class AccountService(@Inject val accountRepository: AccountRepository, @Inject val transactionRepository: TransactionRepository, @Inject val validator: Validator, @Inject val meterService: MeterService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
