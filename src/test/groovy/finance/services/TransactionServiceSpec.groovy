@@ -1,194 +1,445 @@
 package finance.services
 
 import finance.domain.Account
+import finance.domain.AccountType
 import finance.domain.Category
+import finance.domain.ReceiptImage
+import finance.domain.ReoccurringType
 import finance.domain.Transaction
+import finance.domain.TransactionState
+import finance.helpers.CategoryBuilder
+import finance.helpers.ReceiptImageBuilder
+import finance.helpers.TransactionBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
+import finance.utils.Constants
+import org.hibernate.NonUniqueResultException
 import spock.lang.Ignore
 import spock.lang.Specification
 
+import javax.validation.ConstraintViolation
 import javax.validation.Validator
+import java.sql.Date
 
-class TransactionServiceSpec extends Specification {
-    TransactionRepository mockTransactionRepository = Mock(TransactionRepository)
-    AccountRepository mockAccountRepository = Mock(AccountRepository)
-    Validator mockValidator = Mock(Validator)
-    AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
-    CategoryRepository mockCategoryRepository = Mock(CategoryRepository)
-    CategoryService categoryService = new CategoryService(mockCategoryRepository)
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
+@SuppressWarnings("GroovyAccessibility")
+class TransactionServiceSpec extends BaseServiceSpec {
 
-    def "test transactionService - deleteByGuid"() {
+    protected Category category = CategoryBuilder.builder().build()
+
+    void 'test transactionService - deleteByGuid'() {
         given:
-        def guid = "123"
+        String guid = UUID.randomUUID() // should use GUID generator
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
+
         when:
-        def isDeleted = transactionService.deleteByGuid(guid)
+        Boolean isDeleted = transactionService.deleteTransactionByGuid(guid)
+
         then:
         isDeleted
-        1 * mockTransactionRepository.deleteByGuid(guid)
-        //1 * mockTransactionRepository.deleteByIdFromTransactionCategories(transaction.transactionId)
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        1 * transactionRepositoryMock.deleteByGuid(guid)
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    def "test transactionService - deleteByGuid - no record returned because of invalid guid"() {
+    void 'test transactionService - deleteByGuid - no record returned because of invalid guid'() {
         given:
-        def guid = "123"
+        String guid = UUID.randomUUID()
         Optional<Transaction> transactionOptional = Optional.empty()
+
         when:
-        def isDeleted = transactionService.deleteByGuid(guid)
+        Boolean isDeleted = transactionService.deleteTransactionByGuid(guid)
+
         then:
-        !isDeleted
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        isDeleted == false
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    def "test transactionService - findByGuid"() {
+    void 'test transactionService - findByGuid'() {
         given:
-        def guid = "123"
+        String guid = UUID.randomUUID()
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
+
         when:
-        transactionService.findByGuid(guid)
+        transactionService.findTransactionByGuid(guid)
+
         then:
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    def "test transactionService - insert valid transaction"() {
+    void 'test transactionService - findByGuid - duplicates returned'() {
         given:
-        def categoryName = "my-category"
-        def accountName = "my-account-name"
-        def guid = "123"
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+
+        when:
+        transactionService.findTransactionByGuid(guid)
+
+        then:
+        NonUniqueResultException ex = thrown()
+        ex.message.contains("query did not return a unique result")
+        1 * transactionRepositoryMock.findByGuid(guid) >> { throw new NonUniqueResultException(2) }
+        0 * _
+    }
+
+
+    void 'test transactionService - insert valid transaction'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+
         when:
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
+
         then:
-        isInserted.is(true)
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockValidator.validate(transaction) >> new HashSet()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
-        1 * mockTransactionRepository.save(transaction) >> true
+        isInserted
+        constraintViolations.size() == 0
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        //1 * meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
         0 * _
     }
 
-    @Ignore
-    def "test transactionService - attempt to insert duplicate transaction"() {
+    void 'test transactionService - attempt to insert duplicate transaction - update is called'() {
         given:
-        def categoryName = "my-category"
-        def accountName = "my-account-name"
-        def guid = "123"
-        Transaction transaction = new Transaction()
-        Account account = new Account()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
-        Optional<Account> accountOptional = Optional.of(account)
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
+
         then:
         isInserted
-        1 * mockValidator.validate(transaction) >> new HashSet()
-        //1 * mockTransactionRepository.findByGuid('123')
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
-        1 * mockAccountRepository.findByAccountNameOwner('my-account-name') >> accountOptional
+        constraintViolations.size() == 0
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.of(new Category())
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction entity ->
+            assert entity.transactionDate == transaction.transactionDate
+            assert entity.category == transaction.category
+            assert entity.accountNameOwner == transaction.accountNameOwner
+            assert entity.guid == transaction.guid
+            assert entity.description == transaction.description
+        })
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
         0 * _
     }
 
-    def "test transactionService - insert valid transaction where account name does exist"() {
+    void 'test transactionService - insert valid transaction where account name does exist'() {
         given:
-        def categoryName = "my-category"
-        def accountName = "my-account-name"
-        def guid = "123"
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = new Account()
-        Category category
-        category = new Category()
+        Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+
         when:
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
+
         then:
-        isInserted.is(true)
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockValidator.validate(transaction) >> new HashSet()
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
-        1 * mockTransactionRepository.save(transaction) >> true
+        isInserted
+        constraintViolations.size() == 0
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
         0 * _
     }
 
-    def "test transactionService - insert valid transaction where account name does not exist"() {
+    void 'test transactionService - insert valid transaction where account name does not exist'() {
         given:
-        def categoryName = "my-category"
-        def accountName = "my-account-name"
-        def guid = "123"
-        Transaction transaction = new Transaction()
-        Account account = new Account()
-        Category category
-        category = new Category()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+        Account account = transactionService.createDefaultAccount(transaction.accountNameOwner, AccountType.Credit)
+        Category category = CategoryBuilder.builder().build()
+        category.category = transaction.category
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+        Set<ConstraintViolation<Account>> constraintViolationsAccount = validator.validate(account)
+
         when:
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
+
         then:
         isInserted
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
-        1 * mockAccountRepository.save(_) >> true
-        1 * mockValidator.validate(transaction) >> new HashSet()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        //TODO: fix this validation
-        1 * mockValidator.validate(_) >> new HashSet()
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
-        1 * mockTransactionRepository.save(transaction) >> true
+        constraintViolations.size() == 0
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.saveAndFlush(account) >> true
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * validatorMock.validate(account) >> constraintViolationsAccount
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
         0 * _
     }
 
-    def "test transactionService - insert a valid transaction where category name does not exist"() {
+    void 'test transactionService - insert a valid transaction where category name does not exist'() {
         given:
-        def categoryName = "my-category"
-        def accountName = "my-account-name"
-        def guid = "123"
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = new Account()
-        //Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
-        //Optional<Category> categoryOptional = Optional.of(category)
-        when:
         transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
-        def isInserted = transactionService.insertTransaction(transaction)
+        category.category = transaction.category
+        category.categoryId = 0
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+
+        when:
+        Boolean isInserted = transactionService.insertTransaction(transaction)
+
         then:
         isInserted
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockValidator.validate(transaction) >> new HashSet()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockCategoryRepository.findByCategory(categoryName) >> Optional.empty()
-        1 * mockCategoryRepository.save(_)
-        1 * mockTransactionRepository.save(transaction) >> true
+        constraintViolations.size() == 0
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.empty()
+        1 * validatorMock.validate(category) >> constraintViolations
+        1 * categoryRepositoryMock.saveAndFlush(category)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test -- updateTransactionReoccurringState - not reoccurring'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        Boolean isUpdated = transactionService.updateTransactionReoccurringFlag(transaction.guid, false)
+
+        then:
+        isUpdated
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
+        0 * _
+    }
+
+    void 'test -- updateTransactionState cleared and reoccurring'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.reoccurring = true
+        transaction.transactionState = TransactionState.Cleared
+        transaction.notes = 'my note will be removed'
+
+        when:
+        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+
+        then:
+        transactions.size() == 2
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction futureTransaction ->
+            assert 365L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
+            assert futureTransaction.transactionState == TransactionState.Future
+            assert futureTransaction.notes == ''
+            assert futureTransaction.reoccurring
+            futureTransaction
+        }) >> transaction
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test -- updateTransactionState cleared and reoccurring - fortnightly'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.reoccurringType = ReoccurringType.FortNightly
+        transaction.reoccurring = true
+        transaction.transactionState = TransactionState.Cleared
+        transaction.notes = 'my note will be removed'
+
+        when:
+        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+
+        then:
+        transactions.size() == 2
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction futureTransaction ->
+            assert 14L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
+            assert futureTransaction.transactionState == TransactionState.Future
+            assert futureTransaction.notes == ''
+            assert futureTransaction.reoccurring
+            futureTransaction
+        }) >> transaction
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test -- updateTransactionState not cleared and reoccurring - monthly'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.reoccurring = true
+        transaction.transactionState = TransactionState.Cleared
+
+        when:
+        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Future)
+
+        then:
+        transactions.size() == 1
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test updateTransactionReceiptImageByGuid'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.transactionId = 1
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder().build()
+        receiptImage.receiptImageId = 1
+        Set<ConstraintViolation<ReceiptImage>> constraintViolations = validator.validate(receiptImage)
+        String base64Jpeg = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='
+        def jpgFileBytes = ResourceUtils.getFile("${baseName}/src/test/unit/resources/viking-icon.jpg").getBytes()
+        base64Jpeg = Base64.getEncoder().encodeToString(jpgFileBytes)
+
+        when:
+        transactionService.updateTransactionReceiptImageByGuid(transaction.guid, base64Jpeg)
+
+        then:
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * validatorMock.validate(_ as ReceiptImage) >> constraintViolations
+        1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'create Future Transaction with jan 1 of leap year'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2020-01-01'))
+                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        result.transactionDate == Date.valueOf('2021-01-01')
+        0 * _
+    }
+
+    void 'create Future Transaction with Feb 29'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2020-02-29'))
+                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        result.transactionDate == Date.valueOf('2021-02-28')
+        0 * _
+    }
+
+    void 'create Future Transaction with leap year in play'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2019-03-01'))
+                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        result.transactionDate == Date.valueOf('2020-03-01')
+        0 * _
+    }
+
+    void 'create Future Transaction with reoccurringType undefined'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2019-11-01'))
+                .withReoccurringType(ReoccurringType.Undefined)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        transactionService.createFutureTransaction(preLeapYearTransaction)
+
+
+        then:
+        thrown(RuntimeException)
+        1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test - findAccountsThatRequirePayment'() {
+        given:
+        Date today = new Date(Calendar.instance.time.time)
+        Calendar calendar = Calendar.instance
+        calendar.add(Calendar.DAY_OF_MONTH, 15)
+        Date todayPlusFifteen = new Date(calendar.time.time)
+        calendar.add(Calendar.DAY_OF_MONTH, 1)
+        Date todayPlusSixteen = new Date(calendar.time.time)
+        calendar.add(Calendar.DAY_OF_MONTH, 1)
+        Date todayPlusSeventeen = new Date(calendar.time.time)
+        calendar.add(Calendar.DAY_OF_MONTH, 35)
+        Date todayPlusPastThirty = new Date(calendar.time.time)
+        Account account1 = new Account(accountNameOwner: 'test1', accountType: AccountType.Credit)
+        Account account2 = new Account(accountNameOwner: 'test2', accountType: AccountType.Credit, totals: new BigDecimal(2), totalsBalanced: new BigDecimal(2))
+        Account account3 = new Account(accountNameOwner: 'test3', accountType: AccountType.Credit, totalsBalanced: new BigDecimal(5))
+        Transaction transaction1 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Future, transactionDate: todayPlusPastThirty, amount: new BigDecimal(2.01))
+        Transaction transaction2 = new Transaction(accountNameOwner: 'test2', transactionState: TransactionState.Future, transactionDate: todayPlusFifteen, amount: new BigDecimal(2.02))
+        Transaction transaction3 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Outstanding, transactionDate: todayPlusPastThirty, amount: new BigDecimal(4.03))
+        Transaction transaction4 = new Transaction(accountNameOwner: 'test3', transactionState: TransactionState.Future, transactionDate: todayPlusSeventeen, amount: new BigDecimal(3.04))
+        Transaction transaction5 = new Transaction(accountNameOwner: 'test2', transactionState: TransactionState.Future, transactionDate: todayPlusSixteen, amount: new BigDecimal(2.05))
+        Transaction transaction6 = new Transaction(accountNameOwner: 'test1', amount: new BigDecimal(2.05))
+
+        when:
+        List<Account> accounts = transactionService.findAccountsThatRequirePayment()
+
+        then:
+        accounts.size() == 3
+        1 * accountRepositoryMock.updateTheGrandTotalForAllClearedTransactions()
+        1 * accountRepositoryMock.updateTheGrandTotalForAllTransactions()
+        //1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]  //TODO: why is this not triggered?
+        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0) >> [account1, account2, account3]
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test3', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
         0 * _
     }
 }
