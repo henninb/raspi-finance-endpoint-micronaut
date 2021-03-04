@@ -51,6 +51,9 @@ dependencies {
     // Also required to enable endpoint
     implementation("io.micronaut:micronaut-management")
 
+    //graphics
+    implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")
+
     kapt("io.micronaut.data:micronaut-data-processor:$micronautDataVersion")
     implementation("io.micronaut.data:micronaut-data-jdbc:$micronautDataVersion")
 

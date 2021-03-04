@@ -31,7 +31,7 @@ class AccountController(@Inject val accountService: AccountService) {
     @Get("/select/active")
     @Produces(MediaType.APPLICATION_JSON)
     fun selectAllActiveAccounts(): HttpResponse<List<Account>> {
-        val accounts: List<Account> = accountService.findAllActiveAccounts()
+        val accounts: List<Account> = accountService.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")
             return HttpResponse.notFound()
@@ -88,17 +88,17 @@ class AccountController(@Inject val accountService: AccountService) {
         return HttpResponse.notModified()
     }
 
-    @Patch("/update")
-    fun updateTransaction(@Body account: Map<String, String>): HttpResponse<String> {
-        val toBePatchedTransaction = mapper.convertValue(account, Account::class.java)
-        val updateStatus: Boolean = accountService.patchAccount(toBePatchedTransaction)
-        if (updateStatus) {
-            return HttpResponse.ok("account updated")
-        }
-
-        return HttpResponse.notModified()
-        //throw EmptyAccountException("account not updated.")
-    }
+//    @Patch("/update")
+//    fun updateTransaction(@Body account: Map<String, String>): HttpResponse<String> {
+//        val toBePatchedTransaction = mapper.convertValue(account, Account::class.java)
+//        val updateStatus: Boolean = accountService.patchAccount(toBePatchedTransaction)
+//        if (updateStatus) {
+//            return HttpResponse.ok("account updated")
+//        }
+//
+//        return HttpResponse.notModified()
+//        //throw EmptyAccountException("account not updated.")
+//    }
 
 //    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
 //    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class])

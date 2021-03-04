@@ -5,7 +5,6 @@ import finance.domain.Category
 import finance.repositories.CategoryRepository
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import java.sql.Timestamp
 import java.util.*
 import javax.inject.Inject
@@ -15,10 +14,14 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Singleton
-open class CategoryService(@Inject val categoryRepository: CategoryRepository, @Inject val validator: Validator, @Inject val meterService: MeterService) {
+open class CategoryService(
+    @Inject val categoryRepository: CategoryRepository,
+    @Inject val validator: Validator,
+    @Inject val meterService: MeterService
+) {
 
     @Timed
-     open fun insertCategory(category: Category): Boolean {
+    open fun insertCategory(category: Category): Boolean {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -33,7 +36,7 @@ open class CategoryService(@Inject val categoryRepository: CategoryRepository, @
     }
 
     @Timed
-     open fun findByCategory(categoryName: String): Optional<Category> {
+    open fun findByCategory(categoryName: String): Optional<Category> {
         val categoryOptional: Optional<Category> = categoryRepository.findByCategory(categoryName)
         if (categoryOptional.isPresent) {
             return categoryOptional
@@ -42,18 +45,18 @@ open class CategoryService(@Inject val categoryRepository: CategoryRepository, @
     }
 
     @Timed
-    open  fun deleteByCategoryName(categoryName: String): Boolean {
+    open fun deleteByCategoryName(categoryName: String): Boolean {
         categoryRepository.deleteByCategory(categoryName)
         return true
     }
 
     @Timed
-    open  fun fetchAllActiveCategories(): List<Category> {
+    open fun fetchAllActiveCategories(): List<Category> {
         return categoryRepository.findByActiveStatusOrderByCategory(true)
     }
 
     @Timed
-    open  fun findByCategoryName(categoryName: String): Optional<Category> {
+    open fun findByCategoryName(categoryName: String): Optional<Category> {
         return categoryRepository.findByCategory(categoryName)
     }
 

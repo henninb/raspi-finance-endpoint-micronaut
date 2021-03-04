@@ -13,13 +13,13 @@ import javax.inject.Inject
 class PaymentController(@Inject val paymentService: PaymentService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    @Get("/select")
-    fun selectAllPayments(): MutableHttpResponse<MutableIterable<Payment>> {
-        println("payment select got here")
-        val payments = paymentService.findAllPayments()
-        println("payment select got there")
-        return HttpResponse.ok(payments)
-    }
+//    @Get("/select")
+//    fun selectAllPayments(): MutableHttpResponse<MutableIterable<Payment>> {
+//        println("payment select got here")
+//        val payments = paymentService.findAllPayments()
+//        println("payment select got there")
+//        return HttpResponse.ok(payments)
+//    }
 
     //@PostMapping(path = ["/insert"])
     @Post("/insert")
