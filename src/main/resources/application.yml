@@ -1,6 +1,15 @@
 micronaut:
-  server:
+  ssl:
+    enabled: true
+    key-store:
+      path: classpath:hornsup-raspi-finance-keystore.jks
+      type: JKS
+      password: monday1
+    # buildSelfSigned: true
     port: 8080
+  server:
+    #dualProtocol: true
+    #port: 8080
     cors:
       enabled: true
   application:
@@ -10,7 +19,7 @@ micronaut:
 
 datasources:
   default:
-    url: jdbc:postgresql://hornsup:5432/finance_db
+    url: jdbc:postgresql://192.168.100.124:5432/finance_db
     driverClassName: org.postgresql.Driver
     username: henninb
     password: monday1

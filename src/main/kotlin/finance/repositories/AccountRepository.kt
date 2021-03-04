@@ -13,13 +13,18 @@ import javax.transaction.Transactional
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
-//    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(
-//        activeStatus: Boolean = true,
-//        accountType: AccountType = AccountType.Credit,
-//        totals: BigDecimal = BigDecimal(
-//            0.0
-//        )
-//    ): List<Account>
+
+    @Query(
+            value = "SELECT * FROM t_account WHERE account_type = 'credit' and active_status = true and totals > 0.0 order by account_name_owner",
+            nativeQuery = true
+    )
+    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(
+        activeStatus: Boolean = true,
+        accountType: AccountType = AccountType.Credit,
+        totals: BigDecimal = BigDecimal(
+            0.0
+        )
+    ): List<Account>
 
     @Transactional
     fun deleteByAccountNameOwner(accountNameOwner: String)

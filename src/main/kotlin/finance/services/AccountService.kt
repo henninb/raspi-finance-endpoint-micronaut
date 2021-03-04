@@ -31,16 +31,13 @@ open class AccountService(
 
     @Timed
     open fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
-//        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
-//        if (accounts.isEmpty()) {
-//            logger.warn("findAllActiveAccounts - no accounts found.")
-//        } else {
-//            logger.info("findAllActiveAccounts - found accounts.")
-//        }
-//        return accounts
-        //val accounts : List<Account> =
-        //return accounts
-        return  listOf(Account())
+        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+        if (accounts.isEmpty()) {
+            logger.warn("findAllActiveAccounts - no accounts found.")
+        } else {
+            logger.info("findAllActiveAccounts - found accounts.")
+        }
+        return accounts
     }
 
     @Timed
