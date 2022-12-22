@@ -5,13 +5,10 @@ import finance.domain.Account
 import finance.services.AccountService
 import io.micronaut.context.annotation.Parameter
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.HttpStatus
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.*
-import io.micronaut.http.server.exceptions.ExceptionHandler
-import org.slf4j.LoggerFactory
+import jakarta.inject.Inject
 import java.util.*
-import javax.inject.Inject
 
 @Controller("/account")
 class AccountController(@Inject val accountService: AccountService) {

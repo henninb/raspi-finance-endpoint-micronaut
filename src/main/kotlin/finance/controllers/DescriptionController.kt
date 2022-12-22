@@ -2,11 +2,10 @@ package finance.controllers
 
 import finance.domain.Description
 import finance.services.DescriptionService
-import finance.services.TransactionService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import java.util.*
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 @Controller("/description")
 class DescriptionController(@Inject val descriptionService: DescriptionService) {

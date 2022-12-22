@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parameter
 import finance.repositories.ParameterRepository
 import io.micrometer.core.annotation.Timed
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.apache.logging.log4j.LogManager
 import java.sql.Timestamp
 import java.util.*
-
-import javax.inject.Inject
-import javax.inject.Singleton
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
@@ -23,7 +22,7 @@ open class ParameterService(
     @Timed
     open fun insertParameter(parameter: Parameter): Boolean {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
-        if (constraintViolations.isNotEmpty()) {
+        if (!constraintViolations.isEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert parameter as there is a constraint violation on the data.")
             meterService.incrementExceptionThrownCounter("ValidationException")

@@ -9,7 +9,6 @@ import finance.utils.ImageFormatTypeConverter
 import finance.utils.ValidImage
 import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.Proxy
-import org.hibernate.annotations.Type
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
@@ -70,7 +69,7 @@ data class ReceiptImage(
 
     @Lob
     @JsonProperty
-    @Type(type = "org.hibernate.type.BinaryType")
+    //@Type(type = "org.hibernate.type.BinaryType")
     @field:ValidImage
     @Column(name = "image", nullable = false)
     lateinit var image: ByteArray
@@ -78,7 +77,7 @@ data class ReceiptImage(
     @Lob
     @JsonProperty
     @field:ValidImage
-    @Type(type = "org.hibernate.type.BinaryType")
+    //@Type(type = "org.hibernate.type.BinaryType")
     @Column(name = "thumbnail", nullable = false)
     lateinit var thumbnail: ByteArray
 

@@ -5,14 +5,13 @@ import finance.domain.Account
 import finance.repositories.AccountRepository
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator

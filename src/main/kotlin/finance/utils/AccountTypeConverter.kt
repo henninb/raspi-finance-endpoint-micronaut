@@ -3,6 +3,7 @@ package finance.utils
 import finance.domain.AccountType
 import javax.persistence.AttributeConverter
 import javax.persistence.Converter
+import java.util.*
 
 @Converter
 class AccountTypeConverter : AttributeConverter<AccountType, String> {
@@ -16,7 +17,7 @@ class AccountTypeConverter : AttributeConverter<AccountType, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): AccountType {
-        return when (attribute.trim().toLowerCase()) {
+        return when (attribute.trim().lowercase(Locale.getDefault())) {
             "credit" -> AccountType.Credit
             "debit" -> AccountType.Debit
             "undefined" -> AccountType.Undefined

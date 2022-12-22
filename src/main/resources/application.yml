@@ -1,15 +1,15 @@
 micronaut:
-  ssl:
-    enabled: true
-    key-store:
-      path: classpath:hornsup-raspi-finance-keystore.jks
-      type: JKS
-      password: monday1
-    # buildSelfSigned: true
-    port: 8080
+#  ssl:
+#    enabled: false
+#    key-store:
+#      path: classpath:hornsup-raspi-finance-keystore.jks
+#      type: JKS
+#      password: monday1
+#    # buildSelfSigned: true
+#    port: 8080
   server:
     #dualProtocol: true
-    #port: 8080
+    port: 8443
     cors:
       enabled: true
   application:
@@ -19,17 +19,22 @@ micronaut:
 
 datasources:
   default:
-    url: jdbc:postgresql://192.168.100.124:5432/finance_db
+    url: jdbc:postgresql://localhost:5432/finance_test_db
     driverClassName: org.postgresql.Driver
     username: henninb
     password: monday1
     schema-generate: NONE
-    dialect: POSTGRES
+    dialect: Postgres
 
-jpa:
-  default:
-    properties:
-      hibernate:
-        hbm2ddl:
-          auto: validate
-        show_sql: true
+#jpa:
+#  default:
+#    entity-scan:
+#      packages: finance.domain
+#    properties:
+#      hibernate:
+##        bytecode:
+##          provider: none
+#        hbm2ddl:
+#          auto: validate
+#        show_sql: true
+

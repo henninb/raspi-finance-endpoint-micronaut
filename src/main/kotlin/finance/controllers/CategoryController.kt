@@ -2,11 +2,10 @@ package finance.controllers
 
 import finance.domain.Category
 import finance.services.CategoryService
-import finance.services.DescriptionService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import java.util.*
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 @Controller("/category")
 class CategoryController(@Inject val categoryService: CategoryService) {

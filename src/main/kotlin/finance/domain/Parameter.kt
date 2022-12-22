@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
+import javax.persistence.*
 import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
-import javax.persistence.*
 import javax.validation.constraints.Min
 import javax.validation.constraints.Size
 

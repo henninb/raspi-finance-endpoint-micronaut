@@ -3,6 +3,7 @@ package finance.utils
 import finance.domain.ReoccurringType
 import javax.persistence.AttributeConverter
 import javax.persistence.Converter
+import java.util.*
 
 @Converter
 class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
@@ -19,7 +20,7 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): ReoccurringType {
-        return when (attribute.trim().toLowerCase()) {
+        return when (attribute.trim().lowercase(Locale.getDefault())) {
             "annually" -> ReoccurringType.Annually
             "bi-annually" -> ReoccurringType.BiAnnually
             "fortnightly" -> ReoccurringType.FortNightly

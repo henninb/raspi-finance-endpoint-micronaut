@@ -25,7 +25,6 @@ import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-
 @Entity
 @Proxy(lazy = false)
 @Table(name = "t_transaction")

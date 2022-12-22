@@ -3,6 +3,7 @@ package finance.utils
 import finance.domain.ImageFormatType
 import javax.persistence.AttributeConverter
 import javax.persistence.Converter
+import java.util.*
 
 @Converter
 class ImageFormatTypeConverter : AttributeConverter<ImageFormatType, String> {
@@ -16,7 +17,7 @@ class ImageFormatTypeConverter : AttributeConverter<ImageFormatType, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): ImageFormatType {
-        return when (attribute.trim().toLowerCase()) {
+        return when (attribute.trim().lowercase(Locale.getDefault())) {
             "jpeg" -> ImageFormatType.Jpeg
             "png" -> ImageFormatType.Png
             "undefined" -> ImageFormatType.Undefined

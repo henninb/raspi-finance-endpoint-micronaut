@@ -4,18 +4,18 @@ import finance.utils.Constants
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import javax.inject.Inject
-import javax.inject.Singleton
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
 @Singleton
 class MeterService(@Inject val meterRegistry: MeterRegistry) {
 
-    private val hostName = "server" //setHostName()
+    private val hostName = "localhost" //setHostName()
 
-    fun setHostName(): String? {
-        val env = System.getenv()
-        return if (env.containsKey("COMPUTERNAME")) env["COMPUTERNAME"] else if (env.containsKey("HOSTNAME")) env["HOSTNAME"] else "Unknown"
-    }
+//    fun setHostName(): String? {
+//        val env = System.getenv()
+//        return if (env.containsKey("COMPUTERNAME")) env["COMPUTERNAME"] else if (env.containsKey("HOSTNAME")) env["HOSTNAME"] else "Unknown"
+//    }
 
     fun incrementExceptionThrownCounter(exceptionName: String): Unit = Counter
         .builder(Constants.EXCEPTION_THROWN_COUNTER)

@@ -6,6 +6,7 @@ import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.validation.ConstraintValidator
 import javax.validation.ConstraintValidatorContext
+import java.util.*
 
 class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
     override fun initialize(constraintAnnotation: ValidImage) {
@@ -23,11 +24,11 @@ class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
 
         imageReaders.forEachRemaining { imageReader ->
             flag = when {
-                imageReader.formatName.toLowerCase() == "jpeg" -> {
+                imageReader.formatName.lowercase(Locale.getDefault()) == "jpeg" -> {
                     logger.debug("image format: ${imageReader.formatName}")
                     true
                 }
-                imageReader.formatName.toLowerCase() == "png" -> {
+                imageReader.formatName.lowercase(Locale.getDefault()) == "png" -> {
                     logger.debug("image format: ${imageReader.formatName}")
                     true
                 }

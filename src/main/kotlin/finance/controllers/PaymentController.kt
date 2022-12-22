@@ -5,7 +5,7 @@ import finance.services.PaymentService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import java.util.*
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 @Controller("/payment")
 class PaymentController(@Inject val paymentService: PaymentService) {

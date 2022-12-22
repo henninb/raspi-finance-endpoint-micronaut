@@ -7,12 +7,12 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import io.micrometer.core.annotation.Timed
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.apache.logging.log4j.LogManager
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator

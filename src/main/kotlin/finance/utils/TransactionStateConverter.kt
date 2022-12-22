@@ -3,6 +3,7 @@ package finance.utils
 import finance.domain.TransactionState
 import javax.persistence.AttributeConverter
 import javax.persistence.Converter
+import java.util.*
 
 @Converter
 class TransactionStateConverter : AttributeConverter<TransactionState, String> {
@@ -17,7 +18,7 @@ class TransactionStateConverter : AttributeConverter<TransactionState, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): TransactionState {
-        return when (attribute.trim().toLowerCase()) {
+        return when (attribute.trim().lowercase(Locale.getDefault())) {
             "outstanding" -> TransactionState.Outstanding
             "future" -> TransactionState.Future
             "cleared" -> TransactionState.Cleared

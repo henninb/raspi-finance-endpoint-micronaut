@@ -2,6 +2,7 @@ package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.util.*
 
 @JsonFormat
 enum class ReoccurringType(val type: String) {
@@ -24,7 +25,7 @@ enum class ReoccurringType(val type: String) {
     Undefined("undefined");
 
     fun value(): String = type
-    override fun toString(): String = name.toLowerCase()
+    override fun toString(): String = name.lowercase(Locale.getDefault())
 
     companion object {
         //private val VALUES = values();

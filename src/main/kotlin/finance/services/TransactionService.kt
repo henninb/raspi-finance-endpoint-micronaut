@@ -1,12 +1,12 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.*
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
@@ -17,9 +17,6 @@ import java.util.*
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
-import javax.inject.Inject
-import javax.inject.Singleton
-import javax.transaction.Transactional
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
@@ -262,8 +259,8 @@ open class TransactionService(
                     existingReceiptImage.thumbnail = thumbnail
                     existingReceiptImage.image = rawImage
                     existingReceiptImage.imageFormatType = imageFormatType
-                    val response = receiptImageService.insertReceiptImage(receiptImageOptional.get())
-                    return response
+                    return receiptImageService.insertReceiptImage(receiptImageOptional.get())
+                    //return response
                 }
                 logger.error("Failed to update receipt image for transaction ${transaction.guid}")
                 meterService.incrementExceptionThrownCounter("RuntimeException")
@@ -378,11 +375,11 @@ open class TransactionService(
 
         imageReaders.forEachRemaining { imageReader ->
             format = when {
-                imageReader.formatName.toLowerCase() == "jpeg" -> {
+                imageReader.formatName.lowercase(Locale.getDefault()) == "jpeg" -> {
                     logger.info(imageReader.formatName)
                     ImageFormatType.Jpeg
                 }
-                imageReader.formatName.toLowerCase() == "png" -> {
+                imageReader.formatName.lowercase(Locale.getDefault()) == "png" -> {
                     logger.info(imageReader.formatName)
                     ImageFormatType.Png
                 }
@@ -492,7 +489,7 @@ open class TransactionService(
     }
 
     companion object {
-        private val mapper = ObjectMapper()
+        //private val mapper = ObjectMapper()
         private val logger = LogManager.getLogger()
     }
 }
