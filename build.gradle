@@ -64,19 +64,28 @@ application {
     mainClass.set("finance.Application")
 }
 java {
-    sourceCompatibility = JavaVersion.toVersion("17")
+    sourceCompatibility = JavaVersion.toVersion("21")
+    targetCompatibility = JavaVersion.toVersion("21")
 }
 
 tasks {
     compileKotlin {
         kotlinOptions {
-            jvmTarget = "17"
+            jvmTarget = "21"
+            freeCompilerArgs += "-Xjvm-default=all"
         }
     }
     compileTestKotlin {
         kotlinOptions {
-            jvmTarget = "17"
+            jvmTarget = "21"
+            freeCompilerArgs += "-Xjvm-default=all"
         }
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+    kotlinOptions {
+        javaParameters = true
     }
 }
 graalvmNative.toolchainDetection.set(false)
