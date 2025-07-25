@@ -16,3 +16,4 @@ out/
 log.txt
 bin/
 node_module
+finance-web-client/node_modules/
