@@ -178,12 +178,12 @@ class TransactionController(@Inject val transactionService: TransactionService) 
             val accountNameOwners = transactionService.findAccountsThatRequirePayment()
             if (accountNameOwners.isEmpty()) {
                 BaseController.logger.info("no accountNameOwners found.")
-                return HttpResponse.notFound()
+                return HttpResponse.notFound<List<Account>>()
             }
             HttpResponse.ok(accountNameOwners)
         } catch (e: Exception) {
             BaseController.logger.error("Error finding accounts that require payment", e)
-            HttpResponse.serverError("Internal server error")
+            HttpResponse.serverError<List<Account>>()
         }
     }
 
