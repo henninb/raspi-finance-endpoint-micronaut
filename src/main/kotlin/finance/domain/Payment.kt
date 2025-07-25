@@ -9,19 +9,17 @@ import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
-import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
-import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Digits
-import javax.validation.constraints.Min
-import javax.validation.constraints.Pattern
-import javax.validation.constraints.Size
+import java.util.Calendar
+import jakarta.persistence.*
+import jakarta.validation.constraints.Digits
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(
     name = "t_payment",
     uniqueConstraints = [UniqueConstraint(columnNames = ["account_name_owner", "transaction_date", "amount"])]

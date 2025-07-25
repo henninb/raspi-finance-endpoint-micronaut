@@ -8,14 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.ImageFormatTypeConverter
 import finance.utils.ValidImage
 import org.apache.logging.log4j.LogManager
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Min
+import jakarta.persistence.*
+import jakarta.validation.constraints.Min
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_receipt_image")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReceiptImage(
@@ -34,10 +32,14 @@ data class ReceiptImage(
 
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    var activeStatus: Boolean = true
+    var activeStatus: Boolean = true,
+
+    @JsonProperty
+    @Column(name = "owner", nullable = true)
+    var owner: String? = null
 ) {
 
-    constructor() : this(0L, 0L, true)
+    constructor() : this(0L, 0L, true, null)
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
@@ -67,18 +69,14 @@ data class ReceiptImage(
     @Convert(converter = ImageFormatTypeConverter::class)
     var imageFormatType: ImageFormatType = ImageFormatType.Undefined
 
-    @Lob
     @JsonProperty
-    //@Type(type = "org.hibernate.type.BinaryType")
     @field:ValidImage
-    @Column(name = "image", nullable = false)
+    @Column(name = "image", nullable = false, columnDefinition = "BYTEA")
     lateinit var image: ByteArray
 
-    @Lob
     @JsonProperty
     @field:ValidImage
-    //@Type(type = "org.hibernate.type.BinaryType")
-    @Column(name = "thumbnail", nullable = false)
+    @Column(name = "thumbnail", nullable = false, columnDefinition = "BYTEA")
     lateinit var thumbnail: ByteArray
 
     override fun toString(): String {

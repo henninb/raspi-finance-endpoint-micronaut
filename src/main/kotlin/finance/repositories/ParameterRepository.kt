@@ -4,7 +4,7 @@ import finance.domain.Parameter
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
 import java.util.*
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 @Repository
 interface ParameterRepository : JpaRepository<Parameter, Long> {

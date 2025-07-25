@@ -5,44 +5,45 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
-import javax.persistence.*
-import org.hibernate.annotations.Proxy
+import jakarta.persistence.*
 import java.sql.Timestamp
 import java.util.*
-import javax.validation.constraints.Min
-import javax.validation.constraints.Size
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
-@Table(name = "t_parm")
+@Table(name = "t_parameter")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Parameter(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "t_parm_parm_id_seq")
+    @SequenceGenerator(name = "t_parameter_parameter_id_seq")
     @field:Min(value = 0L)
     @JsonProperty
-    @Column(name = "parm_id", nullable = false)
+    @Column(name = "parameter_id", nullable = false)
     var parameterId: Long,
 
     @field:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "parm_name", unique = true, nullable = false)
+    @Column(name = "parameter_name", unique = true, nullable = false)
     @JsonProperty
     var parameterName: String,
 
-
     @field:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "parm_value", unique = true, nullable = false)
+    @Column(name = "parameter_value", nullable = false)
     @JsonProperty
     var parameterValue: String,
 
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    var activeStatus: Boolean = true
+    var activeStatus: Boolean = true,
+
+    @JsonProperty
+    @Column(name = "owner", nullable = true)
+    var owner: String? = null
 ) {
-    constructor() : this(0L, "", "", true)
+    constructor() : this(0L, "", "", true, null)
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

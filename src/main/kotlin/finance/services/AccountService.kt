@@ -12,9 +12,10 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
+import finance.domain.TransactionState
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 
 @Singleton
 open class AccountService(
@@ -22,7 +23,22 @@ open class AccountService(
     @Inject val transactionRepository: TransactionRepository,
     @Inject val validator: Validator,
     @Inject val meterService: MeterService
-) {
+) : IAccountService {
+
+    @Timed
+    override fun account(accountNameOwner: String): Optional<Account> {
+        return accountRepository.findByAccountNameOwner(accountNameOwner)
+    }
+
+    @Timed
+    override fun accounts(): List<Account> {
+        return accountRepository.findByActiveStatusOrderByAccountNameOwner()
+    }
+
+    // TODO: Implement these interface methods as needed
+    override fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal = BigDecimal.ZERO
+    override fun deleteAccount(accountNameOwner: String): Boolean = false
+    override fun updateTotalsForAllAccounts(): Boolean = false
     @Timed
     open fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
@@ -51,7 +67,7 @@ open class AccountService(
     }
 
     @Timed
-    open fun findAccountsThatRequirePayment(): List<String> {
+    override fun findAccountsThatRequirePayment(): List<String> {
         return accountRepository.findAccountsThatRequirePayment()
     }
 
@@ -68,7 +84,7 @@ open class AccountService(
     }
 
     @Timed
-    open fun insertAccount(account: Account): Boolean {
+    override fun insertAccount(account: Account): Boolean {
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
@@ -123,7 +139,7 @@ open class AccountService(
 
     //TODO: Complete the method logic
     @Timed
-    open fun updateAccount(account: Account): Boolean {
+    override fun updateAccount(account: Account): Boolean {
         val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
         if (optionalAccount.isPresent) {
             val accountToBeUpdated = optionalAccount.get()
@@ -139,7 +155,7 @@ open class AccountService(
     }
 
     @Timed
-    open fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean {
+    override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean {
         val newAccountOptional = accountRepository.findByAccountNameOwner(newAccountNameOwner)
         val oldAccountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
 

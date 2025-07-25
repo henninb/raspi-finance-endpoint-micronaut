@@ -7,17 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.LowerCaseConverter
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Min
-import javax.validation.constraints.Pattern
-import javax.validation.constraints.Size
+import jakarta.persistence.*
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_category")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Category(
@@ -36,7 +34,7 @@ data class Category(
     @field:Size(min = 1, max = 50)
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "category", unique = true, nullable = false)
+    @Column(name = "category_name", unique = true, nullable = false)
     @JsonProperty
     var category: String
 ) {

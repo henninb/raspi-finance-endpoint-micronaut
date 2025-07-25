@@ -6,19 +6,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.LowerCaseConverter
-import javax.persistence.Entity
-import javax.persistence.Table
-import javax.persistence.UniqueConstraint
-import org.hibernate.annotations.Proxy
+import jakarta.persistence.Entity
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import java.math.BigDecimal
 import java.sql.Timestamp
-import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Min
-import javax.validation.constraints.Size
+import java.util.Calendar
+import jakarta.persistence.*
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(
     name = "t_account",
     uniqueConstraints = [UniqueConstraint(
@@ -59,23 +57,40 @@ data class Account(
 
     @JsonProperty
     //@field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    @Column(name = "outstanding", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @Column(name = "outstanding", precision = 12, scale = 2, columnDefinition = "NUMERIC(12,2) DEFAULT 0.00")
     var outstanding: BigDecimal,
 
     @JsonProperty
     //@field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    @Column(name = "future", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @Column(name = "future", precision = 12, scale = 2, columnDefinition = "NUMERIC(12,2) DEFAULT 0.00")
     var future: BigDecimal,
 
     @JsonProperty
     //@field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    @Column(name = "cleared", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @Column(name = "cleared", precision = 12, scale = 2, columnDefinition = "NUMERIC(12,2) DEFAULT 0.00")
     var cleared: BigDecimal,
+
+    @JsonProperty
+    @Column(name = "payment_required", nullable = true, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    var paymentRequired: Boolean? = true,
+
+    @JsonProperty
+    @Column(name = "account_name", nullable = true)
+    var accountName: String? = null,
+
+    @JsonProperty
+    @Column(name = "account_owner", nullable = true)
+    var accountOwner: String? = null,
+
+    @JsonProperty
+    @Column(name = "owner", nullable = true)
+    var owner: String? = null,
 
 ) {
     constructor() : this(
         0L, "", AccountType.Undefined, true,
-        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0)
+        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0),
+        true, null, null, null
     )
 
     @JsonIgnore
@@ -85,6 +100,14 @@ data class Account(
     @JsonIgnore
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "validation_date", nullable = false)
+    var validationDate: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_closed", nullable = false)
+    var dateClosed: Timestamp = Timestamp(0)
 
     override fun toString(): String {
         //mapper.setTimeZone(TimeZone.getDefault())

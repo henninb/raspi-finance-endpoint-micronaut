@@ -35,22 +35,21 @@ micronaut:
 
 datasources:
   default:
-    url: jdbc:postgresql://localhost:5432/finance_test_db
+    url: jdbc:postgresql://192.168.10.10:5432/finance_db
     driverClassName: org.postgresql.Driver
     username: henninb
     password: monday1
     schema-generate: NONE
     dialect: Postgres
 
-#jpa:
-#  default:
-#    entity-scan:
-#      packages: finance.domain
-#    properties:
-#      hibernate:
-##        bytecode:
-##          provider: none
-#        hbm2ddl:
-#          auto: validate
-#        show_sql: true
+jpa:
+  default:
+    entity-scan:
+      packages: 'finance.domain'
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: validate
+        show_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 

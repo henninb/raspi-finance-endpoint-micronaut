@@ -17,9 +17,9 @@ import java.util.*
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import java.util.Base64
 
 @Singleton
@@ -222,8 +222,8 @@ open class TransactionService(
             logger.info("successfully updated ${transaction.guid}")
 
             if (transaction.transactionState == TransactionState.Cleared &&
-                transaction.reoccurring &&
-                transaction.reoccurringType != ReoccurringType.Undefined
+                transaction.reoccurringType != ReoccurringType.Undefined &&
+                transaction.reoccurringType != ReoccurringType.Onetime
             ) {
                 val transactionReoccurring = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
                 logger.info("successfully added reoccurring transaction ${transactionReoccurring.guid}")
@@ -334,8 +334,8 @@ open class TransactionService(
             transactions.add(databaseResponseUpdated)
             //TODO: add metric here
             if (databaseResponseUpdated.transactionState == TransactionState.Cleared &&
-                databaseResponseUpdated.reoccurring &&
-                databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined
+                databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined &&
+                databaseResponseUpdated.reoccurringType != ReoccurringType.Onetime
             ) {
                 val databaseResponseInserted = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
                 transactions.add(databaseResponseInserted)
@@ -415,7 +415,7 @@ open class TransactionService(
         transactionFuture.receiptImageId = null
         transactionFuture.dueDate = transaction.dueDate
         transactionFuture.notes = ""
-        transactionFuture.reoccurring = true
+        // transactionFuture.reoccurring = true // Field removed from entity
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
         transactionFuture.transactionDate = Date(calendar.timeInMillis)
@@ -435,7 +435,8 @@ open class TransactionService(
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
-            transaction.reoccurring = reoccurring
+            // Update reoccurringType based on boolean flag
+            transaction.reoccurringType = if (reoccurring) ReoccurringType.Monthly else ReoccurringType.Onetime
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
             transactionRepository.saveAndFlush(transaction)
             //TODO: add metric here
@@ -466,10 +467,9 @@ open class TransactionService(
                 )
             val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
 
-
-            //if(recent.isNotEmpty()) {
-            accountNeedingAttention.add(account)
-            //}
+            if(recent.isNotEmpty()) {
+                accountNeedingAttention.add(account)
+            }
         }
 
         if (accountNeedingAttention.isNotEmpty()) {

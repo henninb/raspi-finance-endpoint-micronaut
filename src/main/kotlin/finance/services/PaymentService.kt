@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.AccountType
 import finance.domain.Payment
+import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
@@ -13,9 +14,9 @@ import org.apache.logging.log4j.LogManager
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 
 @Singleton
 open class PaymentService(
@@ -97,7 +98,7 @@ open class PaymentService(
         }
         transactionDebit.transactionState = TransactionState.Outstanding
         transactionDebit.accountType = AccountType.Debit
-        transactionDebit.reoccurring = false
+        transactionDebit.reoccurringType = ReoccurringType.Onetime
         transactionDebit.accountNameOwner = paymentAccountNameOwner
         transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
@@ -125,7 +126,7 @@ open class PaymentService(
 
         transactionCredit.transactionState = TransactionState.Outstanding
         transactionCredit.accountType = AccountType.Credit
-        transactionCredit.reoccurring = false
+        transactionCredit.reoccurringType = ReoccurringType.Onetime
         transactionCredit.accountNameOwner = payment.accountNameOwner
         transactionCredit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionCredit.dateAdded = Timestamp(Calendar.getInstance().time.time)

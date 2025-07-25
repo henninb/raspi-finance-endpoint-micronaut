@@ -7,7 +7,7 @@ import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
 import java.math.BigDecimal
 import java.util.*
-import javax.transaction.Transactional
+import jakarta.transaction.Transactional
 
 @Repository
 interface AccountRepository : JpaRepository<Account, Long> {

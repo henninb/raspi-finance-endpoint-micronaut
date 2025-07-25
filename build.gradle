@@ -11,9 +11,8 @@ plugins {
       id("org.jetbrains.kotlin.jvm") version "$kotlinVersion"
       id("org.jetbrains.kotlin.kapt") version "$kotlinVersion"
       id("org.jetbrains.kotlin.plugin.allopen") version "$kotlinVersion"
-      id("org.jetbrains.kotlin.plugin.jpa") version "$kotlinVersion"
-      id("com.github.johnrengelman.shadow") version "7.1.2"
-      id("io.micronaut.application") version "3.4.1"
+      id("com.github.johnrengelman.shadow") version "8.1.1"
+      id("io.micronaut.application") version "4.4.4"
 }
 
 version "0.1"
@@ -29,9 +28,18 @@ configurations {
     developmentOnly
 }
 
+
 dependencies {
+    annotationProcessor("io.micronaut.data:micronaut-data-processor")
+    annotationProcessor("io.micronaut:micronaut-inject-java")
+    annotationProcessor("io.micronaut.validation:micronaut-validation")
     kapt("io.micronaut.data:micronaut-data-processor")
+    kapt("io.micronaut:micronaut-inject-java")
+    kapt("io.micronaut.validation:micronaut-validation")
+    implementation("io.micronaut:micronaut-http-server-netty")
+    implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
+    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.views:micronaut-views-thymeleaf")
@@ -39,11 +47,18 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("org.yaml:snakeyaml")
     //hibernate
     //implementation("org.hibernate:hibernate-core:6.1.6.Final")
     //runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut.validation:micronaut-validation")
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+    implementation("org.hibernate.validator:hibernate-validator:8.0.0.Final")
+    implementation("jakarta.transaction:jakarta.transaction-api:2.0.1")
+    implementation('io.jsonwebtoken:jjwt:0.9.1')
+    implementation("javax.xml.bind:jaxb-api:2.3.1")
+    implementation("org.glassfish.jaxb:jaxb-runtime:2.3.1")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.micronaut.micrometer:micronaut-micrometer-core")
     implementation ("org.apache.logging.log4j:log4j-core:2.14.0")
@@ -52,7 +67,7 @@ dependencies {
 
     runtimeOnly("ch.qos.logback:logback-classic:$logbackVersion")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-    testImplementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    // testImplementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
     testImplementation("io.micronaut:micronaut-inject-groovy")
     testImplementation("org.spockframework:spock-core") {
         exclude group: "org.codehaus.groovy", module: "groovy-all"
@@ -87,6 +102,9 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     kotlinOptions {
         javaParameters = true
     }
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
 graalvmNative.toolchainDetection.set(false)
 micronaut {
@@ -96,4 +114,9 @@ micronaut {
         incremental(true)
         annotations("finance.*")
     }
+}
+
+allOpen {
+    annotation("io.micronaut.data.annotation.MappedEntity")
+    annotation("io.micronaut.http.annotation.Controller")
 }

@@ -13,20 +13,18 @@ import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import org.apache.logging.log4j.LogManager
-import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Digits
-import javax.validation.constraints.Min
-import javax.validation.constraints.Pattern
-import javax.validation.constraints.Size
+import java.util.Calendar
+import jakarta.persistence.*
+import jakarta.validation.constraints.Digits
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -53,6 +51,10 @@ data class Transaction(
     @JsonProperty
     @field:Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType,
+
+    @Column(name = "transaction_type", columnDefinition = "TEXT DEFAULT 'undefined'", nullable = false)
+    @JsonProperty
+    var transactionType: String = "undefined",
 
     @JsonProperty
     @field:Size(min = 3, max = 40)
@@ -81,8 +83,8 @@ data class Transaction(
     var category: String,
 
     @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-    @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @field:Digits(integer = 12, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+    @Column(name = "amount", nullable = false, precision = 12, scale = 2, columnDefinition = "NUMERIC(12,2) DEFAULT 0.00")
     var amount: BigDecimal,
 
     @JsonProperty
@@ -93,10 +95,6 @@ data class Transaction(
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
-
-    @JsonProperty
-    @Column(name = "reoccurring", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    var reoccurring: Boolean = false,
 
     @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @JsonProperty
@@ -112,8 +110,8 @@ data class Transaction(
 ) {
 
     constructor() : this(
-        0L, "", 0, AccountType.Undefined, "", Date(0),
-        "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, ""
+        0L, "", 0, AccountType.Undefined, "undefined", "", Date(0),
+        "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, ""
     )
 
     @JsonGetter("transactionDate")
@@ -163,6 +161,10 @@ data class Transaction(
     @JsonIgnore
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "owner", nullable = true)
+    var owner: String? = null
 
     //TODO: 11/19/2020 - cannot reference a transaction that does not exist
     //TODO: 11/19/2020 - Probably need to change to a OneToMany relationship

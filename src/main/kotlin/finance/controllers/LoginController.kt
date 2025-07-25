@@ -105,13 +105,19 @@ class LoginController(private val userService: UserService) : BaseController() {
     // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
     @Get("/me")
     fun getCurrentUser(@CookieValue(value = "token", defaultValue = "") token: String): HttpResponse<Any> {
-        // Check if the token cookie is present.
-        if (token.isBlank()) {
-            logger.info("No token found in the request")
-            return HttpResponse.status(HttpStatus.UNAUTHORIZED)
-        }
+        return try {
+            // Check if JWT key is configured
+            if (!this::jwtKey.isInitialized || jwtKey.isBlank()) {
+                logger.error("JWT key is not properly configured")
+                return HttpResponse.serverError("Server configuration error")
+            }
 
-        try {
+            // Check if the token cookie is present.
+            if (token.isBlank()) {
+                logger.info("No token found in the request")
+                return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+            }
+
             // Parse and validate the JWT.
             val claims = Jwts.parser()
                 .setSigningKey(jwtKey.toByteArray())
@@ -132,10 +138,10 @@ class LoginController(private val userService: UserService) : BaseController() {
             }
 
             // Return user information (excluding sensitive data).
-            return HttpResponse.ok(user)
+            HttpResponse.ok(user)
         } catch (e: Exception) {
-            logger.error("JWT validation failed: ${e.message}")
-            return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+            logger.error("Error processing /api/me request", e)
+            HttpResponse.serverError("Internal server error")
         }
     }
 }

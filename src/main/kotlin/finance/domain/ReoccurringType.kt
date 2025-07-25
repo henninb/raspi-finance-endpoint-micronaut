@@ -21,6 +21,9 @@ enum class ReoccurringType(val type: String) {
     @JsonProperty("quarterly")
     Quarterly("quarterly"),
 
+    @JsonProperty("onetime")
+    Onetime("onetime"),
+
     @JsonProperty("undefined")
     Undefined("undefined");
 

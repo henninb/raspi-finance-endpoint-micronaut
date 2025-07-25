@@ -5,16 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
 import java.sql.Timestamp
 import java.util.*
-import io.micronaut.data.annotation.*
+import jakarta.persistence.*
+import jakarta.persistence.GenerationType
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 
-@MappedEntity("t_user")
+@Entity
+@Table(name = "t_user")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class User(
         @field:Id
-        @field:GeneratedValue(GeneratedValue.Type.IDENTITY)
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         @param:Min(value = 0L)
         @param:JsonProperty
         var userId: Long,

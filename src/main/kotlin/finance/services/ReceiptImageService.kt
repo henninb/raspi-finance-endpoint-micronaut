@@ -9,9 +9,9 @@ import jakarta.inject.Singleton
 import org.apache.logging.log4j.LogManager
 import java.sql.Timestamp
 import java.util.*
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 
 @Singleton
 open class ReceiptImageService(

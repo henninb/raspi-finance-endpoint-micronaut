@@ -174,12 +174,17 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/payment/required
     @Get("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): HttpResponse<List<Account>> {
-
-        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
-        if (accountNameOwners.isEmpty()) {
-            BaseController.logger.error("no accountNameOwners found.")
+        return try {
+            val accountNameOwners = transactionService.findAccountsThatRequirePayment()
+            if (accountNameOwners.isEmpty()) {
+                BaseController.logger.info("no accountNameOwners found.")
+                return HttpResponse.notFound()
+            }
+            HttpResponse.ok(accountNameOwners)
+        } catch (e: Exception) {
+            BaseController.logger.error("Error finding accounts that require payment", e)
+            HttpResponse.serverError("Internal server error")
         }
-        return HttpResponse.ok(accountNameOwners)
     }
 
 }

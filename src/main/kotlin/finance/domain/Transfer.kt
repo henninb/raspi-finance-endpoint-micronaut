@@ -11,18 +11,20 @@ import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.util.*
-import io.micronaut.data.annotation.*
+import java.util.Calendar
+import jakarta.persistence.*
+import jakarta.persistence.GenerationType
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
-@MappedEntity("t_transfer")
+@Entity
+@Table(name = "t_transfer")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Transfer(
     @field:Id
-    @field:GeneratedValue(GeneratedValue.Type.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @param:Min(value = 0L)
     @param:JsonProperty
     var transferId: Long,

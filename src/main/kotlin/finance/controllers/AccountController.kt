@@ -60,9 +60,7 @@ class AccountController(@Inject val accountService: AccountService) {
             return HttpResponse.ok(accountOptional.get())
         }
 
-        //TODO: micronaut - need to fix
-        //throw Exception(" bad request : could not find this account.")
-        return HttpResponse.badRequest()
+        return HttpResponse.notFound()
     }
 
     //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
