@@ -1,0 +1,359 @@
+/* Custom CSS for Finance Dashboard - Dark Theme */
+
+/* Global Styles - Dark Theme */
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Dark theme color variables */
+:root {
+    --dark-bg-primary: #121212;
+    --dark-bg-secondary: #1e1e1e;
+    --dark-bg-surface: #2d2d2d;
+    --dark-text-primary: #e0e0e0;
+    --dark-text-secondary: #b3b3b3;
+    --dark-border: #404040;
+    --dark-accent: #3f51b5;
+    --dark-success: #4caf50;
+    --dark-danger: #f44336;
+    --dark-warning: #ff9800;
+    --dark-info: #2196f3;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Cards - Dark Theme */
+.card {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text-primary);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+}
+
+.card-header {
+    background-color: var(--dark-bg-surface);
+    border-bottom: 1px solid var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+.card-body {
+    background-color: var(--dark-bg-secondary);
+}
+
+/* Gradient Backgrounds - Dark Theme */
+.bg-gradient-primary {
+    background: linear-gradient(45deg, var(--dark-accent), #303f9f);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, var(--dark-success), #388e3c);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(45deg, var(--dark-danger), #d32f2f);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(45deg, var(--dark-warning), #f57c00);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(45deg, var(--dark-info), #1976d2);
+}
+
+/* Table Styles - Dark Theme */
+.table {
+    --bs-table-bg: var(--dark-bg-secondary);
+    --bs-table-color: var(--dark-text-primary);
+    --bs-table-border-color: var(--dark-border);
+    --bs-table-striped-bg: var(--dark-bg-surface);
+    --bs-table-hover-bg: rgba(63, 81, 181, 0.1);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(63, 81, 181, 0.1) !important;
+    transition: background-color 0.3s ease;
+}
+
+.transaction-row:hover {
+    background-color: rgba(63, 81, 181, 0.1) !important;
+    transform: translateY(-1px);
+    transition: all 0.3s ease;
+}
+
+.table thead th {
+    background-color: var(--dark-bg-surface);
+    border-bottom: 2px solid var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+/* Avatar and Icons - Dark Theme */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--dark-bg-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+.transaction-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+/* Amount Styling - Dark Theme */
+.amount-positive {
+    color: var(--dark-success);
+    font-weight: 600;
+}
+
+.amount-negative {
+    color: var(--dark-danger);
+    font-weight: 600;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    font-weight: bold;
+    color: #6c757d;
+}
+
+/* Search and Filter Controls - Dark Theme */
+.input-group-text {
+    background-color: var(--dark-bg-surface);
+    border-color: var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--dark-bg-surface);
+    border-color: var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--dark-bg-surface);
+    border-color: var(--dark-accent);
+    color: var(--dark-text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(63, 81, 181, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--dark-text-secondary);
+}
+
+/* Badge Improvements */
+.badge {
+    font-weight: 500;
+    font-size: 0.75em;
+}
+
+/* Button Enhancements */
+.btn {
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Loading States - Dark Theme */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--dark-border);
+    border-top: 2px solid var(--dark-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .h2 {
+        font-size: 1.5rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+    }
+}
+
+/* Animation for page load */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Status indicators */
+.status-active {
+    color: #28a745;
+}
+
+.status-inactive {
+    color: #6c757d;
+}
+
+/* Currency formatting */
+.currency {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+/* Hover effects for clickable elements */
+.clickable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable:hover {
+    transform: scale(1.02);
+}
+
+/* Custom scrollbar - Dark Theme */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--dark-bg-surface);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--dark-border);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #606060;
+}
+
+/* Additional Dark Theme Elements */
+.text-muted {
+    color: var(--dark-text-secondary) !important;
+}
+
+.bg-light {
+    background-color: var(--dark-bg-surface) !important;
+}
+
+.border {
+    border-color: var(--dark-border) !important;
+}
+
+.list-group-item {
+    background-color: var(--dark-bg-secondary);
+    border-color: var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+.list-group-item:hover {
+    background-color: var(--dark-bg-surface);
+}
+
+.alert {
+    background-color: var(--dark-bg-surface);
+    border-color: var(--dark-border);
+    color: var(--dark-text-primary);
+}
+
+.modal-content {
+    background-color: var(--dark-bg-secondary);
+    border-color: var(--dark-border);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--dark-border);
+}
+
+/* Status indicators - Dark Theme */
+.status-active {
+    color: var(--dark-success);
+}
+
+.status-inactive {
+    color: var(--dark-text-secondary);
+}
