@@ -37,8 +37,25 @@ open class ReceiptImageService(
     }
 
     @Timed
+    open fun findAllActive(): List<ReceiptImage> {
+        return receiptImageRepository.findAll().toList()
+    }
+
+    @Timed
     open fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
+    }
+
+    @Timed
+    open fun updateReceiptImage(receiptImage: ReceiptImage): Boolean {
+        val existing = receiptImageRepository.findById(receiptImage.receiptImageId)
+        if (existing.isPresent) {
+            receiptImage.dateAdded = existing.get().dateAdded
+            receiptImage.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            receiptImageRepository.saveAndFlush(receiptImage)
+            return true
+        }
+        return false
     }
 
     @Timed

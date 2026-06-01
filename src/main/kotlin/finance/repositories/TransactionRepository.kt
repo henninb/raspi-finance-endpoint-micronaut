@@ -2,10 +2,11 @@ package finance.repositories
 
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
-import java.util.*
 import jakarta.transaction.Transactional
+import java.util.*
 
 @Repository
 interface TransactionRepository : JpaRepository<Transaction, Long> {
@@ -25,6 +26,17 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         transactionStates: List<TransactionState>
     ): List<Transaction>
 
-    //SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction
-    //fun sumAmountBy
+    @Transactional
+    @Query(
+        value = "UPDATE t_transaction SET category = :newCategory WHERE category = :oldCategory AND active_status = true",
+        nativeQuery = true,
+    )
+    fun bulkUpdateCategory(oldCategory: String, newCategory: String): Int
+
+    @Transactional
+    @Query(
+        value = "UPDATE t_transaction SET description = :newDescription WHERE description = :oldDescription AND active_status = true",
+        nativeQuery = true,
+    )
+    fun bulkUpdateDescription(oldDescription: String, newDescription: String): Int
 }

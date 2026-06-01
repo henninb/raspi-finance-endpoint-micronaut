@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Category
 import finance.repositories.CategoryRepository
+import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
@@ -16,6 +17,7 @@ import jakarta.validation.Validator
 @Singleton
 open class CategoryService(
     @Inject val categoryRepository: CategoryRepository,
+    @Inject val transactionRepository: TransactionRepository,
     @Inject val validator: Validator,
     @Inject val meterService: MeterService
 ) {
@@ -36,33 +38,51 @@ open class CategoryService(
     }
 
     @Timed
-    open fun findByCategory(categoryName: String): Optional<Category> {
-        val categoryOptional: Optional<Category> = categoryRepository.findByCategory(categoryName)
-        if (categoryOptional.isPresent) {
-            return categoryOptional
-        }
-        return Optional.empty()
+    open fun findByCategoryName(categoryName: String): Optional<Category> {
+        return categoryRepository.findByCategoryName(categoryName)
     }
 
     @Timed
     open fun deleteByCategoryName(categoryName: String): Boolean {
-        categoryRepository.deleteByCategory(categoryName)
+        categoryRepository.deleteByCategoryName(categoryName)
         return true
     }
 
     @Timed
     open fun fetchAllActiveCategories(): List<Category> {
-        return categoryRepository.findByActiveStatusOrderByCategory(true)
+        return categoryRepository.findByActiveStatusOrderByCategoryName(true)
     }
 
     @Timed
-    open fun findByCategoryName(categoryName: String): Optional<Category> {
-        return categoryRepository.findByCategory(categoryName)
+    open fun updateCategory(category: Category): Boolean {
+        val existing = categoryRepository.findByCategoryName(category.categoryName)
+        if (existing.isPresent) {
+            val toUpdate = existing.get()
+            toUpdate.activeStatus = category.activeStatus
+            toUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            categoryRepository.saveAndFlush(toUpdate)
+            return true
+        }
+        return false
+    }
+
+    @Timed
+    open fun mergeCategories(newCategory: String, oldCategory: String): Category {
+        val newOpt = categoryRepository.findByCategoryName(newCategory)
+        val oldOpt = categoryRepository.findByCategoryName(oldCategory)
+        if (!newOpt.isPresent) throw RuntimeException("Category not found: $newCategory")
+        if (!oldOpt.isPresent) throw RuntimeException("Category not found: $oldCategory")
+        val updatedCount = transactionRepository.bulkUpdateCategory(oldCategory, newCategory)
+        logger.info("Merged $updatedCount transactions from '$oldCategory' into '$newCategory'")
+        val old = oldOpt.get()
+        old.activeStatus = false
+        old.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        categoryRepository.saveAndFlush(old)
+        return newOpt.get()
     }
 
     companion object {
         private val mapper = ObjectMapper()
         private val logger = LogManager.getLogger()
     }
-
 }

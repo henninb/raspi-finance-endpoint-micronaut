@@ -39,7 +39,7 @@ open class TransactionService(
             val transaction = transactionOptional.get()
             if (transaction.categories.size > 0) {
                 //TODO: add metric here
-                val categoryOptional = categoryService.findByCategory(transaction.category)
+                val categoryOptional = categoryService.findByCategoryName(transaction.category)
                 transaction.categories.remove(categoryOptional.get())
             }
 
@@ -116,7 +116,7 @@ open class TransactionService(
     open fun processCategory(transaction: Transaction) {
         when {
             transaction.category != "" -> {
-                val optionalCategory = categoryService.findByCategory(transaction.category)
+                val optionalCategory = categoryService.findByCategoryName(transaction.category)
                 if (optionalCategory.isPresent) {
                     transaction.categories.add(optionalCategory.get())
                 } else {
@@ -133,7 +133,7 @@ open class TransactionService(
     open fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
-        category.category = categoryName
+        category.categoryName = categoryName
         return category
     }
 

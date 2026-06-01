@@ -14,7 +14,6 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
-
 @Entity
 @Table(name = "t_category")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -36,7 +35,7 @@ data class Category(
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "category_name", unique = true, nullable = false)
     @JsonProperty
-    var category: String
+    var categoryName: String
 ) {
     constructor() : this(0L, true, "")
 

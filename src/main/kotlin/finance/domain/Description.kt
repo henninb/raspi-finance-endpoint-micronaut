@@ -31,7 +31,7 @@ data class Description(
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "description_name", unique = true, nullable = false)
     @JsonProperty
-    var description: String
+    var descriptionName: String
 ) {
     constructor() : this(0L, true, "")
 

@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Description
 import finance.repositories.DescriptionRepository
+import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
@@ -16,6 +17,7 @@ import jakarta.validation.Validator
 @Singleton
 open class DescriptionService(
     @Inject val descriptionRepository: DescriptionRepository,
+    @Inject val transactionRepository: TransactionRepository,
     @Inject val validator: Validator,
     @Inject val meterService: MeterService
 ) {
@@ -36,19 +38,50 @@ open class DescriptionService(
     }
 
     @Timed
-    open fun deleteByDescriptionName(description: String): Boolean {
-        descriptionRepository.deleteByDescription(description)
+    open fun deleteByDescriptionName(descriptionName: String): Boolean {
+        descriptionRepository.deleteByDescriptionName(descriptionName)
         return true
     }
 
     @Timed
     open fun fetchAllDescriptions(): List<Description> {
-        return descriptionRepository.findByActiveStatusOrderByDescription(true)
+        return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
     }
 
     @Timed
     open fun findByDescriptionName(descriptionName: String): Optional<Description> {
-        return descriptionRepository.findByDescription(descriptionName)
+        return descriptionRepository.findByDescriptionName(descriptionName)
+    }
+
+    @Timed
+    open fun updateDescription(description: Description): Boolean {
+        val existing = descriptionRepository.findByDescriptionName(description.descriptionName)
+        if (existing.isPresent) {
+            val toUpdate = existing.get()
+            toUpdate.activeStatus = description.activeStatus
+            toUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            descriptionRepository.saveAndFlush(toUpdate)
+            return true
+        }
+        return false
+    }
+
+    @Timed
+    open fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
+        val targetOpt = descriptionRepository.findByDescriptionName(targetName)
+        if (!targetOpt.isPresent) throw RuntimeException("Target description not found: $targetName")
+        sourceNames.forEach { sourceName ->
+            val sourceOpt = descriptionRepository.findByDescriptionName(sourceName)
+            if (sourceOpt.isPresent) {
+                val updatedCount = transactionRepository.bulkUpdateDescription(sourceName, targetName)
+                logger.info("Merged $updatedCount transactions from '$sourceName' into '$targetName'")
+                val source = sourceOpt.get()
+                source.activeStatus = false
+                source.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+                descriptionRepository.saveAndFlush(source)
+            }
+        }
+        return targetOpt.get()
     }
 
     companion object {
