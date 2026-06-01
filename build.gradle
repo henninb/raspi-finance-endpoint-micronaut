@@ -11,7 +11,7 @@ plugins {
       id("org.jetbrains.kotlin.jvm") version "$kotlinVersion"
       id("org.jetbrains.kotlin.kapt") version "$kotlinVersion"
       id("org.jetbrains.kotlin.plugin.allopen") version "$kotlinVersion"
-      id("com.gradleup.shadow") version "8.3.4"
+      id("com.gradleup.shadow") version "8.3.10"
       id("io.micronaut.application") version "4.5.4"
 }
 
@@ -54,11 +54,11 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
     implementation("io.micronaut.validation:micronaut-validation")
     implementation("jakarta.validation:jakarta.validation-api:3.1.1")
-    implementation("org.hibernate.validator:hibernate-validator:9.0.1.Final")
+    implementation("org.hibernate.validator:hibernate-validator:9.1.0.Final")
     implementation("jakarta.transaction:jakarta.transaction-api:2.0.1")
-    implementation('io.jsonwebtoken:jjwt:0.9.1')
-    implementation("javax.xml.bind:jaxb-api:2.3.1")
-    implementation("org.glassfish.jaxb:jaxb-runtime:2.3.1")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.7")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.7")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.7")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.micronaut.micrometer:micronaut-micrometer-core")
     implementation ("org.apache.logging.log4j:log4j-core:$apacheLoggingVersion")

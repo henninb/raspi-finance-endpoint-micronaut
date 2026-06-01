@@ -3,7 +3,7 @@ package finance.controllers
 import finance.domain.User
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.security.Keys
 import io.micronaut.context.annotation.Value
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -33,11 +33,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         // Generate JWT after validating credentials.
         val now = Date()
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
+        val secretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token = Jwts.builder()
             .claim("username", loginRequest.username)
-            .setNotBefore(now)
-            .setExpiration(expiration)
-            .signWith(SignatureAlgorithm.HS256, jwtKey.toByteArray())
+            .notBefore(now)
+            .expiration(expiration)
+            .signWith(secretKey)
             .compact()
 
         val cookie = Cookie.of("token", token)
@@ -85,11 +86,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         val now = Date()
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
 
+        val secretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token = Jwts.builder()
             .claim("username", newUser.username)
-            .setNotBefore(now)
-            .setExpiration(expiration)
-            .signWith(SignatureAlgorithm.HS256, jwtKey.toByteArray())
+            .notBefore(now)
+            .expiration(expiration)
+            .signWith(secretKey)
             .compact()
 
         val cookie = Cookie.of("token", token)
@@ -119,10 +121,12 @@ class LoginController(private val userService: UserService) : BaseController() {
             }
 
             // Parse and validate the JWT.
+            val secretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
             val claims = Jwts.parser()
-                .setSigningKey(jwtKey.toByteArray())
-                .parseClaimsJws(token)
-                .body
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .payload
 
             val username = claims["username"] as? String
             if (username.isNullOrBlank()) {
