@@ -8,9 +8,8 @@ import finance.utils.Constants.UUID_PATTERN
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import jakarta.persistence.*
 import jakarta.persistence.GenerationType
@@ -41,7 +40,7 @@ data class Transfer(
 
     @field:ValidDate
     @param:JsonProperty
-    var transactionDate: Date,
+    var transactionDate: LocalDate,
 
     @param:JsonProperty
     @param:Digits(integer = 8, fraction = 2, message = Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE)
@@ -59,21 +58,7 @@ data class Transfer(
     var activeStatus: Boolean = true
 ) {
 
-    constructor() : this(0L, "", "", Date(0), BigDecimal(0.00), "", "")
-
-    @JsonGetter("transactionDate")
-    fun jsonGetterTransferDate(): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-        return simpleDateFormat.format(this.transactionDate)
-    }
-
-    @JsonSetter("transactionDate")
-    fun jsonSetterTransfertDate(stringDate: String) {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
-    }
+    constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal(0.00), "", "")
 
     @JsonIgnore
     var owner: String? = null

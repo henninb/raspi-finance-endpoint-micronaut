@@ -106,14 +106,11 @@ open class CalculationService(
     ): BonusProgress {
         val windowEndDate = startDate.plusDays(windowDays - 1)
         val today = LocalDate.now()
-        val start = Date.valueOf(startDate)
-        val end = Date.valueOf(windowEndDate)
-
         val spent = transactionRepository.sumSpendingInWindow(
-            accountNameOwner, "cleared", start, end
+            accountNameOwner, "cleared", startDate, windowEndDate
         )
         val spentPending = transactionRepository.sumPendingSpendingInWindow(
-            accountNameOwner, listOf("outstanding", "future"), start, end
+            accountNameOwner, listOf("outstanding", "future"), startDate, windowEndDate
         )
         val remaining = (targetAmount - spent).max(BigDecimal.ZERO)
         val percentComplete = if (targetAmount > BigDecimal.ZERO)

@@ -91,7 +91,7 @@ class GraphQLMutationFetchers(
         transaction.accountNameOwner = input["accountNameOwner"] as String
         transaction.accountType = AccountType.valueOf((input["accountType"] as String).replaceFirstChar { it.uppercaseChar() })
         transaction.transactionType = input["transactionType"] as? String ?: "undefined"
-        transaction.transactionDate = java.sql.Date.valueOf(LocalDate.parse(input["transactionDate"] as String))
+        transaction.transactionDate = LocalDate.parse(input["transactionDate"] as String)
         transaction.description = input["description"] as String
         transaction.category = input["category"] as String
         transaction.amount = BigDecimal(input["amount"].toString())
@@ -230,7 +230,7 @@ class GraphQLMutationFetchers(
             transferId = 0,
             sourceAccount = input["sourceAccount"] as String,
             destinationAccount = input["destinationAccount"] as String,
-            transactionDate = java.sql.Date.valueOf(LocalDate.parse(input["transactionDate"] as String)),
+            transactionDate = LocalDate.parse(input["transactionDate"] as String),
             amount = BigDecimal(input["amount"].toString()),
             guidSource = UUID.randomUUID().toString(),
             guidDestination = UUID.randomUUID().toString(),

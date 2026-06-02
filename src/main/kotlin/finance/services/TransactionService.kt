@@ -11,7 +11,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
 import javax.imageio.IIOException
@@ -207,7 +206,7 @@ open class TransactionService(
         //TODO: look into this type of error handling
 
         val sortedTransactions =
-            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate?.time })
+            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("Found an empty list of AccountNameOwner.")
             meterService.incrementAccountListIsEmpty("non-existent-accounts")
@@ -343,7 +342,7 @@ open class TransactionService(
             val transactions = mutableListOf<Transaction>()
             val transaction = transactionOptional.get()
             if (transactionState == TransactionState.Cleared &&
-                transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)
+                transaction.transactionDate.isAfter(LocalDate.now())
             ) {
                 logger.error("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
                 meterService.incrementExceptionThrownCounter("RuntimeException")
@@ -416,7 +415,7 @@ open class TransactionService(
     @Timed
     open fun createFutureTransaction(transaction: Transaction): Transaction {
         val calendar = Calendar.getInstance()
-        calendar.time = transaction.transactionDate
+        calendar.time = java.sql.Date.valueOf(transaction.transactionDate)
 
         if (transaction.reoccurringType == ReoccurringType.FortNightly) {
             calendar.add(Calendar.DATE, 14)
@@ -440,7 +439,7 @@ open class TransactionService(
         // transactionFuture.reoccurring = true // Field removed from entity
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
-        transactionFuture.transactionDate = Date(calendar.timeInMillis)
+        transactionFuture.transactionDate = calendar.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
         transactionFuture.dateUpdated = Timestamp(nextTimestampMillis())
         transactionFuture.dateAdded = Timestamp(nextTimestampMillis())
         logger.info(transactionFuture.toString())
@@ -474,7 +473,7 @@ open class TransactionService(
     open fun findAllActiveTransactions(): List<Transaction> {
         val transactions = transactionRepository.findByActiveStatusOrderByTransactionDateDesc()
         return transactions.sortedWith(
-            compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate?.time }
+            compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate }
         )
     }
 
@@ -487,11 +486,8 @@ open class TransactionService(
         transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName)
 
     @Timed
-    open fun findTransactionsByDateRange(startDate: LocalDate, endDate: LocalDate): List<Transaction> {
-        val start = Date.valueOf(startDate)
-        val end = Date.valueOf(endDate)
-        return transactionRepository.findByTransactionDateBetweenAndActiveStatusOrderByTransactionDateDesc(start, end)
-    }
+    open fun findTransactionsByDateRange(startDate: LocalDate, endDate: LocalDate): List<Transaction> =
+        transactionRepository.findByTransactionDateBetweenAndActiveStatusOrderByTransactionDateDesc(startDate, endDate)
 
     @Timed
     open fun deleteReceiptImageForTransactionByGuid(guid: String): Boolean {
@@ -540,9 +536,7 @@ open class TransactionService(
 
     @Timed
     open fun findAccountsThatRequirePayment(): List<Account> {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_MONTH, 30)
-        val todayPlusThirty = Date(calendar.time.time)
+        val todayPlusThirty = LocalDate.now().plusDays(30)
         val accountNeedingAttention = mutableListOf<Account>()
         val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
         accountService.updateTheGrandTotalForAllClearedTransactions()

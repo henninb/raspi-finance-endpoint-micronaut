@@ -77,7 +77,7 @@ open class PaymentService(
     @Timed
     open fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) {
         transactionDebit.guid = UUID.randomUUID().toString()
-        transactionDebit.transactionDate = Date.valueOf(payment.transactionDate)
+        transactionDebit.transactionDate = payment.transactionDate
         transactionDebit.description = "payment"
         transactionDebit.category = "bill_pay"
         transactionDebit.notes = "to ${payment.destinationAccount}"
@@ -93,7 +93,7 @@ open class PaymentService(
     @Timed
     open fun populateCreditTransaction(transactionCredit: Transaction, payment: Payment) {
         transactionCredit.guid = UUID.randomUUID().toString()
-        transactionCredit.transactionDate = Date.valueOf(payment.transactionDate)
+        transactionCredit.transactionDate = payment.transactionDate
         transactionCredit.description = "payment"
         transactionCredit.category = "bill_pay"
         transactionCredit.notes = "from ${payment.sourceAccount}"

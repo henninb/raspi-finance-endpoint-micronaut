@@ -75,4 +75,11 @@ interface AccountRepository : JpaRepository<Account, Long> {
         nativeQuery = true
     )
     fun updateValidationDateForAllAccounts()
+
+    @Transactional
+    @Query(
+        value = "UPDATE t_account SET validation_date = NOW(), date_updated = NOW() WHERE account_id = :accountId",
+        nativeQuery = true
+    )
+    fun updateValidationDateByAccountId(accountId: Long)
 }

@@ -9,7 +9,7 @@ import io.micronaut.data.model.Page
 import io.micronaut.data.model.Pageable
 import jakarta.transaction.Transactional
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import java.util.*
 
 @Repository
@@ -43,8 +43,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     ): List<Transaction>
 
     fun findByTransactionDateBetweenAndActiveStatusOrderByTransactionDateDesc(
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
         activeStatus: Boolean = true
     ): List<Transaction>
 
@@ -61,8 +61,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun sumSpendingInWindow(
         accountNameOwner: String,
         transactionState: String,
-        startDate: Date,
-        endDate: Date
+        startDate: LocalDate,
+        endDate: LocalDate
     ): BigDecimal
 
     @Query(
@@ -72,8 +72,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun sumPendingSpendingInWindow(
         accountNameOwner: String,
         transactionStates: List<String>,
-        startDate: Date,
-        endDate: Date
+        startDate: LocalDate,
+        endDate: LocalDate
     ): BigDecimal
 
     @Transactional

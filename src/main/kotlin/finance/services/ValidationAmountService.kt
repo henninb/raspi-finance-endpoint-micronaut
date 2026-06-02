@@ -18,6 +18,18 @@ open class ValidationAmountService(
 
 
 
+    open fun save(validationAmount: ValidationAmount): ValidationAmount {
+        val timestamp = Timestamp(System.currentTimeMillis())
+        validationAmount.validationDate = timestamp
+        validationAmount.dateAdded = timestamp
+        validationAmount.dateUpdated = timestamp
+        val saved = validationAmountRepository.saveAndFlush(validationAmount)
+        if (saved.accountId > 0) {
+            accountRepository.updateValidationDateByAccountId(saved.accountId)
+        }
+        return saved
+    }
+
     override fun insertValidationAmount(
         accountNameOwner: String,
         validationAmount: ValidationAmount
@@ -43,11 +55,8 @@ open class ValidationAmountService(
         val savedValidationAmount = validationAmountRepository.saveAndFlush(validationAmount)
 
         // Update the validationDate in the Account table
-        if (accountOptional.isPresent) {
-            val account = accountOptional.get()
-            account.validationDate = validationAmount.dateUpdated
-            account.dateUpdated = validationAmount.dateUpdated
-            accountRepository.saveAndFlush(account)
+        if (accountId > 0) {
+            accountRepository.updateValidationDateByAccountId(accountId)
             logger.info("Updated validation date for account: $accountNameOwner")
         }
 

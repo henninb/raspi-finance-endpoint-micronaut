@@ -14,9 +14,8 @@ import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import org.apache.logging.log4j.LogManager
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import jakarta.persistence.*
 import jakarta.validation.constraints.Digits
@@ -66,7 +65,7 @@ data class Transaction(
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     @JsonProperty
-    var transactionDate: Date,
+    var transactionDate: LocalDate,
 
     @JsonProperty
     @field:Size(min = 1, max = 75)
@@ -110,45 +109,13 @@ data class Transaction(
 ) {
 
     constructor() : this(
-        0L, "", 0, AccountType.Undefined, "undefined", "", Date(0),
+        0L, "", 0, AccountType.Undefined, "undefined", "", LocalDate.of(1970, 1, 1),
         "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, ""
     )
 
-    @JsonGetter("transactionDate")
-    fun jsonGetterTransactionDate(): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-//        simpleDateFormat.timeZone = TimeZone.getDefault()
-//        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        return simpleDateFormat.format(this.transactionDate)
-    }
-
-//    @JsonGetter("dueDate")
-//    fun jsonGetterDueDate(): String {
-//        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-//        simpleDateFormat.isLenient = false
-//        return simpleDateFormat.format(this.dueDate)
-//    }
-
-    @JsonSetter("transactionDate")
-    fun jsonSetterTransactionDate(stringDate: String) {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-//        simpleDateFormat.timeZone = TimeZone.getDefault()
-//        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
-    }
-
-//    @JsonSetter("dueDate")
-//    fun jsonSetterDueDate(stringDate: String) {
-//        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-//        simpleDateFormat.isLenient = false
-//        this.dueDate = Date(simpleDateFormat.parse(stringDate).time)
-//    }
-
     @Column(name = "due_date", columnDefinition = "DATE", nullable = true)
     @JsonProperty
-    var dueDate: Date? = null
+    var dueDate: LocalDate? = null
 
     @JsonIgnore
     @Column(name = "receipt_image_id", nullable = true)

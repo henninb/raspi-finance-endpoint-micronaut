@@ -1,7 +1,16 @@
 package finance.graphql
 
 import graphql.GraphQL
+import graphql.GraphQLContext
+import graphql.execution.CoercedVariables
+import graphql.language.StringValue
+import graphql.language.Value
 import graphql.scalars.ExtendedScalars
+import graphql.schema.Coercing
+import graphql.schema.CoercingParseLiteralException
+import graphql.schema.CoercingParseValueException
+import graphql.schema.CoercingSerializeException
+import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
@@ -11,6 +20,45 @@ import io.micronaut.context.annotation.Factory
 import io.micronaut.core.io.ResourceResolver
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
+import java.sql.Timestamp
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val timestampDateTimeScalar: GraphQLScalarType = GraphQLScalarType.newScalar()
+    .name("DateTime")
+    .description("DateTime scalar handling java.sql.Timestamp and java.time.OffsetDateTime")
+    .coercing(object : Coercing<OffsetDateTime, String> {
+        override fun serialize(dataFetcherResult: Any, graphQLContext: GraphQLContext, locale: Locale): String =
+            when (dataFetcherResult) {
+                is Timestamp -> dataFetcherResult.toInstant().atOffset(ZoneOffset.UTC)
+                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                is OffsetDateTime -> dataFetcherResult.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                else -> throw CoercingSerializeException(
+                    "Expected Timestamp or OffsetDateTime but was '${dataFetcherResult.javaClass}'"
+                )
+            }
+
+        override fun parseValue(input: Any, graphQLContext: GraphQLContext, locale: Locale): OffsetDateTime =
+            when (input) {
+                is String -> OffsetDateTime.parse(input, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                is OffsetDateTime -> input
+                else -> throw CoercingParseValueException("Expected a String but was '${input.javaClass}'")
+            }
+
+        override fun parseLiteral(
+            input: Value<*>,
+            variables: CoercedVariables,
+            graphQLContext: GraphQLContext,
+            locale: Locale,
+        ): OffsetDateTime =
+            when (input) {
+                is StringValue -> OffsetDateTime.parse(input.value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                else -> throw CoercingParseLiteralException("Expected a StringValue but was '${input.javaClass}'")
+            }
+    })
+    .build()
 
 @Factory
 class GraphQLFactory(
@@ -30,7 +78,7 @@ class GraphQLFactory(
         val runtimeWiring = RuntimeWiring.newRuntimeWiring()
             .scalar(ExtendedScalars.GraphQLBigDecimal)
             .scalar(ExtendedScalars.Date)
-            .scalar(ExtendedScalars.DateTime)
+            .scalar(timestampDateTimeScalar)
             .scalar(ExtendedScalars.GraphQLLong)
             .type(TypeRuntimeWiring.newTypeWiring("Query")
                 .dataFetcher("accounts", queryFetchers.accounts())

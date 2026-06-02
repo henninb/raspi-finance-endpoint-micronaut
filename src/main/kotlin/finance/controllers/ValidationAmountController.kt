@@ -68,6 +68,25 @@ class ValidationAmountController(
         else throw HttpStatusException(HttpStatus.NOT_FOUND, "Validation amount not found: $validationId")
     }
 
+    @Post
+    @Consumes("application/json")
+    @Produces("application/json")
+    fun insert(
+        @Body validationAmount: ValidationAmount,
+        request: HttpRequest<*>
+    ): HttpResponse<ValidationAmount> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (validationAmount.owner.isNullOrBlank()) validationAmount.owner = owner
+        return try {
+            val response = validationAmountService.save(validationAmount)
+            HttpResponse.status<ValidationAmount>(HttpStatus.CREATED).body(response)
+        } catch (ex: HttpStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            throw HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}")
+        }
+    }
+
     @Post("/insert/{accountNameOwner}")
     @Consumes("application/json")
     @Produces("application/json")
