@@ -76,6 +76,9 @@ data class Transfer(
     }
 
     @JsonIgnore
+    var owner: String? = null
+
+    @JsonIgnore
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     @JsonIgnore

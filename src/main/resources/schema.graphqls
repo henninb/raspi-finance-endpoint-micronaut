@@ -73,6 +73,11 @@ type Account {
     cleared: BigDecimal
     outstanding: BigDecimal
     future: BigDecimal
+    owner: String
+    dateClosed: DateTime
+    validationDate: DateTime
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type Transaction {
@@ -92,18 +97,28 @@ type Transaction {
     notes: String
     dueDate: Date
     receiptImageId: Long
+    receiptImage: ReceiptImage
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type Category {
     categoryId: Long
     categoryName: String!
     activeStatus: Boolean!
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type Description {
     descriptionId: Long
     descriptionName: String!
     activeStatus: Boolean!
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type Payment {
@@ -115,6 +130,9 @@ type Payment {
     guidSource: String
     guidDestination: String
     activeStatus: Boolean!
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type Transfer {
@@ -126,6 +144,9 @@ type Transfer {
     guidSource: String
     guidDestination: String
     activeStatus: Boolean!
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type Parameter {
@@ -133,6 +154,9 @@ type Parameter {
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean!
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type ValidationAmount {
@@ -149,6 +173,11 @@ type ReceiptImage {
     transactionId: Long
     activeStatus: Boolean!
     imageFormatType: String
+    owner: String
+    image: String
+    thumbnail: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 type MedicalExpense {
@@ -170,6 +199,9 @@ type MedicalExpense {
     claimStatus: String
     activeStatus: Boolean
     paidAmount: BigDecimal
+    owner: String
+    dateAdded: DateTime
+    dateUpdated: DateTime
 }
 
 input AccountInput {
@@ -181,6 +213,7 @@ input AccountInput {
     outstanding: BigDecimal
     cleared: BigDecimal
     future: BigDecimal
+    owner: String
 }
 
 input TransactionInput {
@@ -200,18 +233,21 @@ input TransactionInput {
     notes: String
     dueDate: Date
     receiptImageId: Long
+    owner: String
 }
 
 input CategoryInput {
     categoryId: Long
     categoryName: String!
     activeStatus: Boolean
+    owner: String
 }
 
 input DescriptionInput {
     descriptionId: Long
     descriptionName: String!
     activeStatus: Boolean
+    owner: String
 }
 
 input PaymentInput {
@@ -220,6 +256,7 @@ input PaymentInput {
     transactionDate: Date!
     amount: BigDecimal!
     activeStatus: Boolean
+    owner: String
 }
 
 input TransferInput {
@@ -228,6 +265,7 @@ input TransferInput {
     transactionDate: Date!
     amount: BigDecimal!
     activeStatus: Boolean
+    owner: String
 }
 
 input ParameterInput {
@@ -235,6 +273,7 @@ input ParameterInput {
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean
+    owner: String
 }
 
 input ValidationAmountInput {
