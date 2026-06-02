@@ -43,6 +43,11 @@ open class CategoryService(
     }
 
     @Timed
+    open fun findByOwnerAndCategoryName(owner: String, categoryName: String): Optional<Category> {
+        return categoryRepository.findByOwnerAndCategoryName(owner, categoryName)
+    }
+
+    @Timed
     open fun deleteByCategoryName(categoryName: String): Boolean {
         categoryRepository.deleteByCategoryName(categoryName)
         return true
@@ -83,6 +88,6 @@ open class CategoryService(
 
     companion object {
         private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(CategoryService::class.java)
     }
 }

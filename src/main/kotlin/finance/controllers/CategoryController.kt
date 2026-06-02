@@ -3,61 +3,56 @@ package finance.controllers
 import finance.domain.Category
 import finance.services.CategoryService
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
-import java.util.*
 import jakarta.inject.Inject
+import java.util.*
 
-@Controller("/category")
+@Controller("/api/category")
 class CategoryController(@Inject val categoryService: CategoryService) {
 
-    @Get("/select/active", produces = ["application/json"])
+    @Get("/active", produces = ["application/json"])
     fun selectAllActiveCategories(): HttpResponse<List<Category>> {
-        val categories: List<Category> = categoryService.fetchAllActiveCategories()
-        if (categories.isEmpty()) {
-            return HttpResponse.notFound()
-        }
-        return HttpResponse.ok(categories)
+        val categories = categoryService.fetchAllActiveCategories()
+        return if (categories.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(categories)
     }
 
-    @Get("/select/{categoryName}")
-    fun selectCategoryName(@PathVariable categoryName: String): HttpResponse<String> {
-        val categoryOptional = categoryService.findByCategoryName(categoryName)
-        if (categoryOptional.isPresent) {
-            return HttpResponse.ok(BaseController.mapper.writeValueAsString(categoryOptional.get()))
-        }
-        return HttpResponse.notFound("category not found for: $categoryName")
+    @Get("/{categoryName}", produces = ["application/json"])
+    fun selectCategoryName(@PathVariable categoryName: String): HttpResponse<Category> {
+        val optional = categoryService.findByCategoryName(categoryName)
+        return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
-    @Post("/insert", produces = ["application/json"])
-    fun insertCategory(@Body category: Category): HttpResponse<String> {
+    @Post(produces = ["application/json"])
+    fun insertCategory(@Body category: Category): HttpResponse<Category> {
         categoryService.insertCategory(category)
-        return HttpResponse.ok("category inserted")
+        return HttpResponse.status<Category>(HttpStatus.CREATED).body(category)
     }
 
-    @Delete("/delete/{categoryName}", produces = ["application/json"])
-    fun deleteByCategoryName(@PathVariable categoryName: String): HttpResponse<String> {
-        val categoryOptional: Optional<Category> = categoryService.findByCategoryName(categoryName)
-        if (categoryOptional.isPresent) {
-            categoryService.deleteByCategoryName(categoryName)
-            return HttpResponse.ok("category deleted")
-        }
-        return HttpResponse.badRequest("could not delete this category: $categoryName.")
-    }
-
-    @Put("/update/{categoryName}", consumes = ["application/json"], produces = ["application/json"])
-    fun updateCategory(@PathVariable categoryName: String, @Body category: Category): HttpResponse<String> {
+    @Put("/{categoryName}", consumes = ["application/json"], produces = ["application/json"])
+    fun updateCategory(@PathVariable categoryName: String, @Body category: Category): HttpResponse<Category> {
         category.categoryName = categoryName
-        val updated = categoryService.updateCategory(category)
-        return if (updated) HttpResponse.ok("category updated") else HttpResponse.notFound()
+        return if (categoryService.updateCategory(category)) HttpResponse.ok(category) else HttpResponse.notFound()
+    }
+
+    @Delete("/{categoryName}", produces = ["application/json"])
+    fun deleteByCategoryName(@PathVariable categoryName: String): HttpResponse<Category> {
+        val optional: Optional<Category> = categoryService.findByCategoryName(categoryName)
+        if (optional.isPresent) {
+            categoryService.deleteByCategoryName(categoryName)
+            return HttpResponse.ok(optional.get())
+        }
+        return HttpResponse.badRequest()
     }
 
     @Put("/merge", produces = ["application/json"])
-    fun mergeCategories(@QueryValue("new") newCategory: String, @QueryValue("old") oldCategory: String): HttpResponse<String> {
+    fun mergeCategories(@QueryValue("new") newCategory: String, @QueryValue("old") oldCategory: String): HttpResponse<Category> {
         return try {
             categoryService.mergeCategories(newCategory, oldCategory)
-            HttpResponse.ok("categories merged")
+            val result = categoryService.findByCategoryName(newCategory)
+            if (result.isPresent) HttpResponse.ok(result.get()) else HttpResponse.badRequest()
         } catch (e: RuntimeException) {
-            HttpResponse.badRequest("could not merge categories: ${e.message}")
+            HttpResponse.badRequest()
         }
     }
 }

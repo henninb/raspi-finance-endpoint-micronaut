@@ -196,6 +196,6 @@ open class MedicalExpenseService(
         medicalExpenseRepository.getTotalUnpaidBalance() ?: BigDecimal.ZERO
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(MedicalExpenseService::class.java)
     }
 }

@@ -15,6 +15,6 @@ class DateValidator : ConstraintValidator<ValidDate, Date> {
     }
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(DateValidator::class.java)
     }
 }

@@ -21,7 +21,7 @@ open class CalculationService(
 ) : ICalculationService {
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(CalculationService::class.java)
         private const val MAX_REASONABLE_AMOUNT = 999_999_999.99
         private val ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
     }

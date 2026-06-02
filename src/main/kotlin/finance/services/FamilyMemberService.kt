@@ -75,6 +75,6 @@ open class FamilyMemberService(
         familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(FamilyMemberService::class.java)
     }
 }

@@ -36,6 +36,7 @@ dependencies {
     kapt("io.micronaut.data:micronaut-data-processor")
     kapt("io.micronaut:micronaut-inject-java")
     kapt("io.micronaut.validation:micronaut-validation")
+    implementation("org.mindrot:jbcrypt:0.4")
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
@@ -60,6 +61,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.7")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.7")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("io.micronaut:micronaut-management")
     implementation("io.micronaut.micrometer:micronaut-micrometer-core")
     implementation ("org.apache.logging.log4j:log4j-core:$apacheLoggingVersion")
     //graphics
@@ -100,6 +102,12 @@ tasks {
             freeCompilerArgs += "-Xjvm-default=all"
         }
     }
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("raspi-finance-endpoint-micronaut")
+    archiveVersion.set("")
+    archiveClassifier.set("")
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {

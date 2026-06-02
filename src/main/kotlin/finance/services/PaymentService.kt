@@ -140,6 +140,6 @@ open class PaymentService(
 
     companion object {
         private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(PaymentService::class.java)
     }
 }

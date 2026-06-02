@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional
 interface DescriptionRepository : JpaRepository<Description, Long> {
     fun findByActiveStatusOrderByDescriptionName(activeStatus: Boolean): List<Description>
     fun findByDescriptionName(descriptionName: String): Optional<Description>
+    fun findByOwnerAndDescriptionName(owner: String, descriptionName: String): Optional<Description>
 
     @Transactional
     fun deleteByDescriptionName(descriptionName: String)

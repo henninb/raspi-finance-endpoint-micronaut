@@ -4,7 +4,7 @@ package finance.services
 import finance.domain.User
 import finance.repositories.UserRepository
 import jakarta.inject.Singleton
-import java.security.MessageDigest
+import org.mindrot.jbcrypt.BCrypt
 import java.util.*
 
 
@@ -13,24 +13,11 @@ class UserService(
     private val userRepository: UserRepository
 ) : BaseService() {
 
-    private fun hashPassword(password: String): String {
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(password.toByteArray())
-        return digest.fold("") { str, it -> str + "%02x".format(it) }
-    }
-
-    private fun verifyPassword(password: String, hashedPassword: String): Boolean {
-        return hashPassword(password) == hashedPassword
-    }
-
     fun signIn(user: User): Optional<User> {
-        // Retrieve the user by username
         val userOptional = userRepository.findByUsername(user.username)
         if (userOptional.isPresent) {
             val dbUser = userOptional.get()
-            // Validate the raw password against the stored hash
-            logger.info("user-pass: ${user.password}")
-            if (verifyPassword(user.password, dbUser.password)) {
+            if (BCrypt.checkpw(user.password, dbUser.password)) {
                 return Optional.of(user)
             }
         }
@@ -38,14 +25,10 @@ class UserService(
     }
 
     fun signUp(user: User): User {
-        // Check if the username is already taken
         if (userRepository.findByUsername(user.username).isPresent) {
             throw IllegalArgumentException("Username already exists")
         }
-
-        // Hash the raw password securely
-        val hashedPassword = hashPassword(user.password)
-        user.password = hashedPassword
+        user.password = BCrypt.hashpw(user.password, BCrypt.gensalt(12))
         return userRepository.saveAndFlush(user)
     }
 

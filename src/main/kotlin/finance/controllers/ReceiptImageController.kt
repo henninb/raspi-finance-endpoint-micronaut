@@ -1,45 +1,52 @@
 package finance.controllers
 
 import finance.domain.ReceiptImage
+import finance.services.OwnerExtractorService
 import finance.services.ReceiptImageService
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
 import jakarta.inject.Inject
 
-@Controller("/receipt/image")
-class ReceiptImageController(@Inject val receiptImageService: ReceiptImageService) {
+@Controller("/api/receipt/image")
+class ReceiptImageController(
+    @Inject val receiptImageService: ReceiptImageService,
+    @Inject val ownerExtractorService: OwnerExtractorService,
+) {
 
-    @Get("/select/active", produces = ["application/json"])
-    fun selectAllActive(): HttpResponse<List<ReceiptImage>> {
-        val images = receiptImageService.findAllActive()
-        return HttpResponse.ok(images)
-    }
+    @Get("/active", produces = ["application/json"])
+    fun selectAllActive(): HttpResponse<List<ReceiptImage>> =
+        HttpResponse.ok(receiptImageService.findAllActive())
 
-    @Get("/select/{receiptImageId}", produces = ["application/json"])
+    @Get("/{receiptImageId}", produces = ["application/json"])
     fun selectById(@PathVariable receiptImageId: Long): HttpResponse<ReceiptImage> {
         val optional = receiptImageService.findByReceiptImageId(receiptImageId)
         return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
-    @Post("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertReceiptImage(@Body receiptImage: ReceiptImage): HttpResponse<String> {
+    @Post(consumes = ["application/json"], produces = ["application/json"])
+    fun insertReceiptImage(@Body receiptImage: ReceiptImage, request: HttpRequest<*>): HttpResponse<ReceiptImage> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (receiptImage.owner.isNullOrBlank()) receiptImage.owner = owner
         receiptImageService.insertReceiptImage(receiptImage)
-        return HttpResponse.ok("receipt image inserted")
+        return HttpResponse.status<ReceiptImage>(HttpStatus.CREATED).body(receiptImage)
     }
 
-    @Put("/update/{receiptImageId}", consumes = ["application/json"], produces = ["application/json"])
-    fun updateReceiptImage(@PathVariable receiptImageId: Long, @Body receiptImage: ReceiptImage): HttpResponse<String> {
+    @Put("/{receiptImageId}", consumes = ["application/json"], produces = ["application/json"])
+    fun updateReceiptImage(@PathVariable receiptImageId: Long, @Body receiptImage: ReceiptImage, request: HttpRequest<*>): HttpResponse<ReceiptImage> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
         receiptImage.receiptImageId = receiptImageId
-        val updated = receiptImageService.updateReceiptImage(receiptImage)
-        return if (updated) HttpResponse.ok("receipt image updated") else HttpResponse.notFound()
+        if (receiptImage.owner.isNullOrBlank()) receiptImage.owner = owner
+        return if (receiptImageService.updateReceiptImage(receiptImage)) HttpResponse.ok(receiptImage) else HttpResponse.notFound()
     }
 
-    @Delete("/delete/{receiptImageId}", produces = ["application/json"])
-    fun deleteByReceiptImageId(@PathVariable receiptImageId: Long): HttpResponse<String> {
+    @Delete("/{receiptImageId}", produces = ["application/json"])
+    fun deleteByReceiptImageId(@PathVariable receiptImageId: Long): HttpResponse<ReceiptImage> {
         val optional = receiptImageService.findByReceiptImageId(receiptImageId)
         if (optional.isPresent) {
             receiptImageService.deleteReceiptImage(optional.get())
-            return HttpResponse.ok("receipt image deleted")
+            return HttpResponse.ok(optional.get())
         }
         return HttpResponse.notFound()
     }

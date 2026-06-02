@@ -3,63 +3,55 @@ package finance.controllers
 import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.services.FamilyMemberService
+import finance.services.OwnerExtractorService
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
 import jakarta.inject.Inject
 
-@Controller("/family-member")
-class FamilyMemberController(@Inject val familyMemberService: FamilyMemberService) {
+@Controller("/api/family-members")
+class FamilyMemberController(
+    @Inject val familyMemberService: FamilyMemberService,
+    @Inject val ownerExtractorService: OwnerExtractorService,
+) {
 
-    @Get("/select/active", produces = ["application/json"])
+    @Get("/active", produces = ["application/json"])
     fun selectAllActive(): HttpResponse<List<FamilyMember>> {
         val members = familyMemberService.findAllActive()
         return if (members.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(members)
     }
 
-    @Get("/select/{familyMemberId}", produces = ["application/json"])
+    @Get("/{familyMemberId}", produces = ["application/json"])
     fun selectById(@PathVariable familyMemberId: Long): HttpResponse<FamilyMember> {
         val optional = familyMemberService.findById(familyMemberId)
         return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
-    @Post("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertFamilyMember(@Body member: FamilyMember): HttpResponse<String> {
+    @Post(consumes = ["application/json"], produces = ["application/json"])
+    fun insertFamilyMember(@Body member: FamilyMember, request: HttpRequest<*>): HttpResponse<FamilyMember> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (member.owner.isBlank()) member.owner = owner
         familyMemberService.insertFamilyMember(member)
-        return HttpResponse.ok("family member inserted")
+        return HttpResponse.status<FamilyMember>(HttpStatus.CREATED).body(member)
     }
 
-    @Put("/update/{familyMemberId}", consumes = ["application/json"], produces = ["application/json"])
-    fun updateFamilyMember(
-        @PathVariable familyMemberId: Long,
-        @Body member: FamilyMember,
-    ): HttpResponse<String> {
+    @Put("/{familyMemberId}", consumes = ["application/json"], produces = ["application/json"])
+    fun updateFamilyMember(@PathVariable familyMemberId: Long, @Body member: FamilyMember, request: HttpRequest<*>): HttpResponse<FamilyMember> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
         member.familyMemberId = familyMemberId
-        val updated = familyMemberService.updateFamilyMember(member)
-        return if (updated) HttpResponse.ok("family member updated") else HttpResponse.notFound()
+        if (member.owner.isBlank()) member.owner = owner
+        return if (familyMemberService.updateFamilyMember(member)) HttpResponse.ok(member) else HttpResponse.notFound()
     }
 
-    @Delete("/delete/{familyMemberId}", produces = ["application/json"])
-    fun deleteByFamilyMemberId(@PathVariable familyMemberId: Long): HttpResponse<String> {
-        val deleted = familyMemberService.deleteByFamilyMemberId(familyMemberId)
-        return if (deleted) HttpResponse.ok("family member deleted") else HttpResponse.notFound()
-    }
-
-    @Get("/select/relationship/{relationship}", produces = ["application/json"])
-    fun selectByRelationship(@PathVariable relationship: FamilyRelationship): HttpResponse<List<FamilyMember>> {
-        val members = familyMemberService.findByRelationship(relationship)
-        return HttpResponse.ok(members)
-    }
-
-    @Put("/activate/{familyMemberId}", produces = ["application/json"])
-    fun activateFamilyMember(@PathVariable familyMemberId: Long): HttpResponse<String> {
-        val updated = familyMemberService.updateActiveStatus(familyMemberId, true)
-        return if (updated) HttpResponse.ok("family member activated") else HttpResponse.notFound()
-    }
-
-    @Put("/deactivate/{familyMemberId}", produces = ["application/json"])
-    fun deactivateFamilyMember(@PathVariable familyMemberId: Long): HttpResponse<String> {
-        val updated = familyMemberService.updateActiveStatus(familyMemberId, false)
-        return if (updated) HttpResponse.ok("family member deactivated") else HttpResponse.notFound()
+    @Delete("/{familyMemberId}", produces = ["application/json"])
+    fun deleteByFamilyMemberId(@PathVariable familyMemberId: Long): HttpResponse<FamilyMember> {
+        val optional = familyMemberService.findById(familyMemberId)
+        if (optional.isPresent) {
+            familyMemberService.deleteByFamilyMemberId(familyMemberId)
+            return HttpResponse.ok(optional.get())
+        }
+        return HttpResponse.notFound()
     }
 
     @Get("/owner/{owner}", produces = ["application/json"])
@@ -75,5 +67,19 @@ class FamilyMemberController(@Inject val familyMemberService: FamilyMemberServic
     ): HttpResponse<List<FamilyMember>> {
         val members = familyMemberService.findByOwnerAndRelationship(owner, relationship)
         return if (members.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(members)
+    }
+
+    @Put("/{id}/activate", produces = ["application/json"])
+    fun activateFamilyMember(@PathVariable id: Long): HttpResponse<Map<String, String>> {
+        return if (familyMemberService.updateActiveStatus(id, true))
+            HttpResponse.ok(mapOf("message" to "family member activated"))
+        else HttpResponse.notFound()
+    }
+
+    @Put("/{id}/deactivate", produces = ["application/json"])
+    fun deactivateFamilyMember(@PathVariable id: Long): HttpResponse<Map<String, String>> {
+        return if (familyMemberService.updateActiveStatus(id, false))
+            HttpResponse.ok(mapOf("message" to "family member deactivated"))
+        else HttpResponse.notFound()
     }
 }

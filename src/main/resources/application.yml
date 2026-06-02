@@ -1,22 +1,26 @@
 micronaut:
-#  ssl:
-#    enabled: false
-#    key-store:
-#      path: classpath:hornsup-raspi-finance-keystore.jks
-#      type: JKS
-#      password: monday1
-#    # buildSelfSigned: true
-#    port: 8080
+  ssl:
+    enabled: true
+    port: 8443
+    key-store:
+      path: classpath:bhenning-letsencrypt.p12
+      password: ${SSL_KEY_STORE_PASSWORD}
+      type: PKCS12
+    key-alias: bhenning
+    protocol: TLS
   server:
-    port: 8080
+    port: -1
     cors:
       enabled: true
       configurations:
         web:
           allowedOrigins:
-            - "http://localhost:3000"
-            - "http://localhost:4200"
-            - "http://localhost:8080"
+            - "https://localhost:3000"
+            - "https://localhost:4200"
+            - "https://hornsup:3000"
+            - "https://finance.lan"
+            - "https://www.bhenning.com"
+            - "https://www.brianhenning.com"
           allowedMethods:
             - GET
             - POST
@@ -29,21 +33,30 @@ micronaut:
             - "X-Requested-With"
           allowCredentials: true
   application:
-    name: raspi-finance-enpoint-micronaut
+    name: raspi-finance-endpoint-micronaut
   metrics:
     enabled: true
+  endpoints:
+    health:
+      enabled: true
+      sensitive: false
   graphql:
     enabled: true
     path: /graphql
 
 datasources:
   default:
-    url: jdbc:postgresql://192.168.10.10:5432/finance_db
+    url: ${DATASOURCE:jdbc:postgresql://192.168.10.10:5432/finance_db}
     driverClassName: org.postgresql.Driver
-    username: henninb
-    password: monday1
+    username: ${DATASOURCE_USERNAME:henninb}
+    password: ${DATASOURCE_PASSWORD}
     schema-generate: NONE
     dialect: Postgres
+
+custom:
+  project:
+    jwt:
+      key: ${JWT_KEY}
 
 jpa:
   default:

@@ -42,6 +42,6 @@ class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
     }
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(ImageValidator::class.java)
     }
 }

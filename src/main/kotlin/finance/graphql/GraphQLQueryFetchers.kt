@@ -30,7 +30,7 @@ class GraphQLQueryFetchers(
     @Inject private val validationAmountService: ValidationAmountService,
 ) {
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(GraphQLQueryFetchers::class.java)
     }
 
     fun accounts() = DataFetcher { _ ->

@@ -23,6 +23,6 @@ open class BaseService {
 
     companion object {
         val mapper = ObjectMapper()
-        val logger: Logger = LogManager.getLogger()
+        val logger: Logger = LogManager.getLogger(BaseService::class.java)
     }
 }

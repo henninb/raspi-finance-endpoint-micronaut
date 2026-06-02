@@ -200,6 +200,6 @@ data class Transaction(
         private val mapper = ObjectMapper()
 
         @JsonIgnore
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(Transaction::class.java)
     }
 }

@@ -222,6 +222,6 @@ open class AccountService(
 
     companion object {
         private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(AccountService::class.java)
     }
 }

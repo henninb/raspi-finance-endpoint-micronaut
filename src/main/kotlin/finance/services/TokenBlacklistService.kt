@@ -26,6 +26,6 @@ open class TokenBlacklistService(
     }
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(TokenBlacklistService::class.java)
     }
 }

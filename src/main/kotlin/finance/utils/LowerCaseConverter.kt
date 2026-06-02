@@ -26,6 +26,6 @@ class LowerCaseConverter : AttributeConverter<String, String> {
     }
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(LowerCaseConverter::class.java)
     }
 }

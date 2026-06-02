@@ -54,6 +54,11 @@ open class DescriptionService(
     }
 
     @Timed
+    open fun findByOwnerAndDescriptionName(owner: String, descriptionName: String): Optional<Description> {
+        return descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
+    }
+
+    @Timed
     open fun updateDescription(description: Description): Boolean {
         val existing = descriptionRepository.findByDescriptionName(description.descriptionName)
         if (existing.isPresent) {
@@ -86,6 +91,6 @@ open class DescriptionService(
 
     companion object {
         private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(DescriptionService::class.java)
     }
 }

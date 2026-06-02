@@ -24,6 +24,7 @@ import java.util.Base64
 import finance.domain.BonusProgress
 import io.micronaut.data.model.Page
 import io.micronaut.data.model.Pageable
+import io.micronaut.data.model.Sort
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -32,6 +33,7 @@ open class TransactionService(
     @Inject val transactionRepository: TransactionRepository,
     @Inject val accountService: AccountService,
     @Inject val categoryService: CategoryService,
+    @Inject val descriptionService: DescriptionService,
     @Inject val receiptImageService: ReceiptImageService,
     @Inject val validator: Validator,
     @Inject val meterService: MeterService,
@@ -92,6 +94,7 @@ open class TransactionService(
 
         processAccount(transaction)
         processCategory(transaction)
+        processDescription(transaction)
         transaction.dateUpdated = Timestamp(nextTimestampMillis())
         transaction.dateAdded = Timestamp(nextTimestampMillis())
         transactionRepository.saveAndFlush(transaction)
@@ -120,18 +123,31 @@ open class TransactionService(
 
     @Timed
     open fun processCategory(transaction: Transaction) {
-        when {
-            transaction.category != "" -> {
-                val optionalCategory = categoryService.findByCategoryName(transaction.category)
-                if (optionalCategory.isPresent) {
-                    transaction.categories.add(optionalCategory.get())
-                } else {
-                    val category = createDefaultCategory(transaction.category)
-                    categoryService.insertCategory(category)
-                    logger.info("inserted category from transactionService ${transaction.category}")
-                    transaction.categories.add(category)
-                }
-            }
+        if (transaction.category.isBlank()) return
+        val owner = transaction.owner ?: ""
+        val optionalCategory = categoryService.findByOwnerAndCategoryName(owner, transaction.category)
+        if (optionalCategory.isPresent) {
+            transaction.categories.add(optionalCategory.get())
+        } else {
+            val category = createDefaultCategory(transaction.category)
+            category.owner = owner
+            categoryService.insertCategory(category)
+            logger.info("inserted category from transactionService ${transaction.category}")
+            transaction.categories.add(category)
+        }
+    }
+
+    @Timed
+    open fun processDescription(transaction: Transaction) {
+        if (transaction.description.isBlank()) return
+        val owner = transaction.owner ?: ""
+        val optional = descriptionService.findByOwnerAndDescriptionName(owner, transaction.description)
+        if (optional.isEmpty) {
+            val description = Description()
+            description.descriptionName = transaction.description
+            description.owner = owner
+            descriptionService.insertDescription(description)
+            logger.info("inserted description from transactionService ${transaction.description}")
         }
     }
 
@@ -191,7 +207,7 @@ open class TransactionService(
         //TODO: look into this type of error handling
 
         val sortedTransactions =
-            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
+            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate?.time })
         if (transactions.isEmpty()) {
             logger.error("Found an empty list of AccountNameOwner.")
             meterService.incrementAccountListIsEmpty("non-existent-accounts")
@@ -458,7 +474,7 @@ open class TransactionService(
     open fun findAllActiveTransactions(): List<Transaction> {
         val transactions = transactionRepository.findByActiveStatusOrderByTransactionDateDesc()
         return transactions.sortedWith(
-            compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate }
+            compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate?.time }
         )
     }
 
@@ -496,8 +512,14 @@ open class TransactionService(
     }
 
     @Timed
-    open fun findByAccountNameOwnerPaged(accountNameOwner: String, pageable: Pageable): Page<Transaction> =
-        transactionRepository.findByAccountNameOwnerAndActiveStatus(accountNameOwner, true, pageable)
+    open fun findByAccountNameOwnerPaged(accountNameOwner: String, pageable: Pageable): Page<Transaction> {
+        val sort = Sort.of(
+            Sort.Order.desc("transactionState"),
+            Sort.Order.desc("transactionDate")
+        )
+        val sortedPageable = Pageable.from(pageable.number, pageable.size, sort)
+        return transactionRepository.findByAccountNameOwnerAndActiveStatus(accountNameOwner, true, sortedPageable)
+    }
 
     @Timed
     open fun getBonusProgress(
@@ -558,6 +580,6 @@ open class TransactionService(
 
     companion object {
         //private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(TransactionService::class.java)
     }
 }

@@ -45,7 +45,7 @@ class GraphQLMutationFetchers(
     @Inject private val validationAmountService: ValidationAmountService,
 ) {
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(GraphQLMutationFetchers::class.java)
     }
 
     // -------- Account --------

@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional
 interface CategoryRepository : JpaRepository<Category, Long> {
 
     fun findByCategoryName(categoryName: String): Optional<Category>
+    fun findByOwnerAndCategoryName(owner: String, categoryName: String): Optional<Category>
 
     fun findByActiveStatusOrderByCategoryName(activeStatus: Boolean): List<Category>
 

@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional
 @Repository
 interface ParameterRepository : JpaRepository<Parameter, Long> {
     fun findByParameterName(parameterName: String): Optional<Parameter>
+    fun findByActiveStatusOrderByParameterName(activeStatus: Boolean = true): List<Parameter>
 
     @Transactional
     fun deleteByParameterName(parameterName: String)

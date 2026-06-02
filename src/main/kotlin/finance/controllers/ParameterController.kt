@@ -1,37 +1,48 @@
 package finance.controllers
 
 import finance.domain.Parameter
+import finance.services.OwnerExtractorService
 import finance.services.ParameterService
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
-import java.util.*
 import jakarta.inject.Inject
+import java.util.*
 
-@Controller("/parameter")
-class ParameterController(@Inject val parameterService: ParameterService) {
-    //https://hornsup:8080/parm/select/payment_account
-    @Get("/select/{parameterName}", produces = ["application/json"])
+@Controller("/api/parameter")
+class ParameterController(
+    @Inject val parameterService: ParameterService,
+    @Inject val ownerExtractorService: OwnerExtractorService,
+) {
+
+    @Get("/active", produces = ["application/json"])
+    fun selectAllActive(): HttpResponse<List<Parameter>> {
+        val results = parameterService.findAllActive()
+        return if (results.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(results)
+    }
+
+    @Get("/{parameterName}", produces = ["application/json"])
     fun selectParameter(@PathVariable parameterName: String): HttpResponse<Parameter> {
-        val parameterOptional: Optional<Parameter> = parameterService.findByParameter(parameterName)
-        if (!parameterOptional.isPresent) {
-            return HttpResponse.notFound()
-//            BaseController.logger.error("no parameter found.")
-//            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find the parm.")
-        }
-        return HttpResponse.ok(parameterOptional.get())
+        val optional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+        return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8080/parm/insert
-    @Post("/insert", produces = ["application/json"])
-    fun insertParameter(@Body parameter: Parameter): HttpResponse<String> {
+    @Post(produces = ["application/json"])
+    fun insertParameter(@Body parameter: Parameter, request: HttpRequest<*>): HttpResponse<Parameter> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (parameter.owner.isNullOrBlank()) parameter.owner = owner
         parameterService.insertParameter(parameter)
-        //BaseController.logger.debug("insertParameter")
-        return HttpResponse.ok("parameter inserted")
+        return HttpResponse.status<Parameter>(HttpStatus.CREATED).body(parameter)
     }
 
-    @Delete("/delete/{parameterName}", produces = ["application/json"])
-    fun deleteByParameterName(@PathVariable parameterName: String): HttpResponse<String> {
-        parameterService.deleteByParameterName(parameterName)
-        return HttpResponse.ok("parameter deleted")
+    @Delete("/{parameterName}", produces = ["application/json"])
+    fun deleteByParameterName(@PathVariable parameterName: String): HttpResponse<Parameter> {
+        val optional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+        if (optional.isPresent) {
+            parameterService.deleteByParameterName(parameterName)
+            return HttpResponse.ok(optional.get())
+        }
+        return HttpResponse.notFound()
     }
 }

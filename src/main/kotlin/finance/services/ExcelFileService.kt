@@ -70,6 +70,6 @@ open class ExcelFileService(
 
     companion object {
         private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(ExcelFileService::class.java)
     }
 }

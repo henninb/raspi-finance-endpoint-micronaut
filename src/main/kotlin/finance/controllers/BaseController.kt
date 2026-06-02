@@ -8,6 +8,6 @@ open class BaseController {
 
     companion object {
         val mapper = ObjectMapper()
-        val logger: Logger = LogManager.getLogger()
+        val logger: Logger = LogManager.getLogger(BaseController::class.java)
     }
 }

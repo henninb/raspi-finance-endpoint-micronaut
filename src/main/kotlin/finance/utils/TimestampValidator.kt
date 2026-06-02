@@ -16,6 +16,6 @@ class TimestampValidator : ConstraintValidator<ValidTimestamp, Timestamp> {
     }
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(TimestampValidator::class.java)
     }
 }

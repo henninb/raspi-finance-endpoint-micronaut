@@ -88,6 +88,6 @@ data class ReceiptImage(
         private val mapper = ObjectMapper()
 
         @JsonIgnore
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(ReceiptImage::class.java)
     }
 }

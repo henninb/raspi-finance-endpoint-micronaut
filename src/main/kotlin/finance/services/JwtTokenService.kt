@@ -15,7 +15,6 @@ import javax.crypto.SecretKey
 @Singleton
 class JwtTokenService(
     @Value("\${custom.project.jwt.key:default-secret-key-must-be-at-least-32-bytes}") jwtKey: String,
-    @Value("\${micronaut.environments:dev}") private val activeEnvironment: String,
 ) {
     companion object {
         private val securityLogger = LogManager.getLogger("SECURITY.${JwtTokenService::class.java.simpleName}")
@@ -38,9 +37,6 @@ class JwtTokenService(
         securityLogger.info("SECURITY_CONFIG JWT key validated: {} bytes", keyBytes.size)
         Keys.hmacShaKeyFor(keyBytes)
     }
-
-    private val isSecureCookie: Boolean
-        get() = activeEnvironment != "dev" && activeEnvironment != "development"
 
     fun extractToken(request: HttpRequest<*>): String? {
         val fromCookie = request.cookies.findCookie("token").map { it.value }.orElse(null)
@@ -83,15 +79,19 @@ class JwtTokenService(
 
     fun buildTokenCookie(token: String, keepLoggedIn: Boolean): Cookie =
         Cookie.of("token", token)
+            .domain(".bhenning.com")
             .path("/")
             .maxAge(expirySecondsFor(keepLoggedIn))
             .httpOnly(true)
-            .secure(isSecureCookie)
+            .secure(true)
+            .sameSite(io.micronaut.http.cookie.SameSite.None)
 
     fun buildClearCookie(): Cookie =
         Cookie.of("token", "")
+            .domain(".bhenning.com")
             .path("/")
             .maxAge(0)
             .httpOnly(true)
-            .secure(isSecureCookie)
+            .secure(true)
+            .sameSite(io.micronaut.http.cookie.SameSite.None)
 }

@@ -9,6 +9,10 @@ out/
 *.ipr
 *.iws
 *.jks
+ssl/
+src/main/resources/bhenning-letsencrypt.p12
+env.prod
+env.influx
 .project
 .settings
 .classpath

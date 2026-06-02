@@ -15,7 +15,10 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Entity
-@Table(name = "t_category")
+@Table(
+    name = "t_category",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["owner", "category_name"], name = "unique_owner_category_name")]
+)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Category(
     @Id
@@ -26,6 +29,11 @@ data class Category(
     @Column(name = "category_id", nullable = false)
     var categoryId: Long,
 
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100)
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
@@ -33,11 +41,11 @@ data class Category(
     @field:Size(min = 1, max = 50)
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "category_name", unique = true, nullable = false)
+    @Column(name = "category_name", nullable = false)
     @JsonProperty
     var categoryName: String
 ) {
-    constructor() : this(0L, true, "")
+    constructor() : this(0L, "", true, "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

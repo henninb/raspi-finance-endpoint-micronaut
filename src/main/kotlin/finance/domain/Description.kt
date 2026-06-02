@@ -12,7 +12,10 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 
 @Entity
-@Table(name = "t_description")
+@Table(
+    name = "t_description",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["owner", "description_name"], name = "unique_owner_description_name")]
+)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Description(
     @Id
@@ -23,17 +26,22 @@ data class Description(
     @Column(name = "description_id", nullable = false)
     var descriptionId: Long,
 
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100)
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
     @field:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "description_name", unique = true, nullable = false)
+    @Column(name = "description_name", nullable = false)
     @JsonProperty
     var descriptionName: String
 ) {
-    constructor() : this(0L, true, "")
+    constructor() : this(0L, "", true, "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

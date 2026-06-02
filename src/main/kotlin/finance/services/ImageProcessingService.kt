@@ -17,7 +17,7 @@ open class ImageProcessingService(
 ) : IImageProcessingService {
 
     companion object {
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(ImageProcessingService::class.java)
         private const val THUMBNAIL_SIZE = 100
         private const val MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
     }

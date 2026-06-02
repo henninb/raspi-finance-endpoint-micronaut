@@ -8,11 +8,11 @@ import io.micronaut.http.annotation.*
 import io.micronaut.http.exceptions.HttpStatusException
 import java.util.*
 
-@Controller("/transfer")
+@Controller("/api/transfer")
 class TransferController(private var transferService: TransferService) : BaseController() {
 
     // curl -k https://localhost:8443/transfer/select
-    @Get("/select")
+    @Get("/active")
     @Produces("application/json")
     fun selectAllTransfers(): HttpResponse<List<Transfer>> {
         val transfers = transferService.findAllTransfers()
@@ -27,7 +27,7 @@ class TransferController(private var transferService: TransferService) : BaseCon
     fun insertTransfer(@Body transfer: Transfer): HttpResponse<Transfer> {
         return try {
             val transferResponse = transferService.insertTransfer(transfer)
-            HttpResponse.ok(transferResponse)
+            HttpResponse.status<Transfer>(HttpStatus.CREATED).body(transferResponse)
         } catch (ex: HttpStatusException) {
             throw HttpStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transfer: ${ex.message}")
         } catch (ex: Exception) {
@@ -35,14 +35,14 @@ class TransferController(private var transferService: TransferService) : BaseCon
         }
     }
 
-    @Get("/select/{transferId}")
+    @Get("/{transferId}")
     @Produces("application/json")
     fun selectByTransferId(@PathVariable transferId: Long): HttpResponse<Transfer> {
         val result = transferService.findByTransferId(transferId)
         return if (result.isPresent) HttpResponse.ok(result.get()) else HttpResponse.notFound()
     }
 
-    @Put("/update/{transferId}")
+    @Put("/{transferId}")
     @Consumes("application/json")
     @Produces("application/json")
     fun updateTransfer(@PathVariable transferId: Long, @Body transfer: Transfer): HttpResponse<Transfer> {
@@ -52,7 +52,7 @@ class TransferController(private var transferService: TransferService) : BaseCon
     }
 
     // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/transfer/delete/1001
-    @Delete("/delete/{transferId}")
+    @Delete("/{transferId}")
     @Produces("application/json")
     fun deleteByTransferId(@PathVariable transferId: Long): HttpResponse<Transfer> {
         val transferOptional: Optional<Transfer> = transferService.findByTransferId(transferId)

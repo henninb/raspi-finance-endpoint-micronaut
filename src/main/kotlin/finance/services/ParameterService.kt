@@ -41,6 +41,10 @@ open class ParameterService(
     }
 
     @Timed
+    open fun findAllActive(): List<Parameter> =
+        parameterRepository.findByActiveStatusOrderByParameterName()
+
+    @Timed
     open fun findByParameter(parameterName: String): Optional<Parameter> {
         val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parameterName)
         if (parameterOptional.isPresent) {
@@ -51,6 +55,6 @@ open class ParameterService(
 
     companion object {
         private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
+        private val logger = LogManager.getLogger(ParameterService::class.java)
     }
 }

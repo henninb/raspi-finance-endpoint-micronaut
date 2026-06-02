@@ -5,18 +5,26 @@ import finance.domain.BonusProgress
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.services.OwnerExtractorService
 import finance.services.TransactionService
 import io.micronaut.data.model.Page
 import io.micronaut.data.model.Pageable
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
 import jakarta.inject.Inject
 
-@Controller("/transaction")
-class TransactionController(@Inject val transactionService: TransactionService) {
+@Controller("/api/transaction")
+class TransactionController(
+    @Inject val transactionService: TransactionService,
+    @Inject val ownerExtractorService: OwnerExtractorService,
+) {
+
+    private fun extractOwner(request: HttpRequest<*>) = ownerExtractorService.extractOwner(request)
 
 
     //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
@@ -37,16 +45,14 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     //accounts/{accountNameOwner}/transactions/totals
     //curl -k https://hornsup:8080/transaction/account/totals/chase_brian
     @Get("/account/totals/{accountNameOwner}", produces = ["application/json"])
-    fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<String> {
+    fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): HttpResponse<Map<String, BigDecimal>> {
         val results: Map<String, BigDecimal> = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
-
         BaseController.logger.info("totals=${results}")
-
-        return HttpResponse.ok(BaseController.mapper.writeValueAsString(results))
+        return HttpResponse.ok(results)
     }
 
     //curl -k https://hornsup:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
-    @Get("/select/{guid}", produces = ["application/json"])
+    @Get("/{guid}", produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): HttpResponse<Transaction> {
         BaseController.logger.debug("findTransaction() guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
@@ -63,19 +69,19 @@ class TransactionController(@Inject val transactionService: TransactionService) 
 
     //TODO: 2021-01-10, return the payload of the updated and the inserted
     //TODO: 2021-01-10, consumes JSON should be turned back on
-    @Put("/update/{guid}", produces = ["application/json"])
-    //@Put("/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
+    @Put("/{guid}", produces = ["application/json"])
     fun updateTransaction(
         @PathVariable("guid") guid: String,
-        @Body transaction: Map<String, Any>
-    ): HttpResponse<String> {
+        @Body transaction: Map<String, Any>,
+        request: HttpRequest<*>
+    ): HttpResponse<Transaction> {
         val toBePatchedTransaction = BaseController.mapper.convertValue(transaction, Transaction::class.java)
-        val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
-        if (updateStatus) {
-            return HttpResponse.ok("transaction updated")
+        if (toBePatchedTransaction.owner.isNullOrBlank()) {
+            toBePatchedTransaction.owner = extractOwner(request) ?: ""
         }
-        //throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
-        return HttpResponse.notFound("transaction not found and thus not updated: $guid")
+        return if (transactionService.updateTransaction(toBePatchedTransaction))
+            HttpResponse.ok(toBePatchedTransaction)
+        else HttpResponse.notFound()
     }
 
     //TODO: return the payload of the updated and the inserted
@@ -87,21 +93,9 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     fun updateTransactionState(
         @PathVariable("guid") guid: String,
         @PathVariable("state") state: TransactionState
-    ): HttpResponse<String> {
+    ): HttpResponse<Transaction> {
         val transactions = transactionService.updateTransactionState(guid, state)
-        if (transactions.isNotEmpty()) {
-            val response: MutableMap<String, String> = HashMap()
-            response["message"] = "updated transactionState"
-            response["transactions"] = transactions.toString()
-            return HttpResponse.ok(BaseController.mapper.writeValueAsString(response))
-        }
-        //BaseController.logger.error("The transaction guid = $guid could not be updated for transaction state.")
-        //meterService.incrementTransactionRestTransactionStateUpdateFailureCounter("unknown")
-//        throw ResponseStatusException(
-//            HttpStatus.NOT_MODIFIED,
-//            "The transaction guid = $guid could not be updated for transaction state."
-//        )
-        return HttpResponse.notModified()
+        return if (transactions.isNotEmpty()) HttpResponse.ok(transactions.first()) else HttpResponse.notModified()
     }
 
     @Put(
@@ -123,17 +117,18 @@ class TransactionController(@Inject val transactionService: TransactionService) 
         return HttpResponse.notModified()
     }
 
-    //TODO: should return a 201 CREATED
-    //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
-    @Post("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertTransaction(@Body transaction: Transaction): HttpResponse<String> {
-        BaseController.logger.info("insert - transaction.transactionDate: $transaction")
-        if (transactionService.insertTransaction(transaction)) {
-            BaseController.logger.info(transaction.toString())
-            return HttpResponse.ok("transaction inserted")
+    @Post(consumes = ["application/json"], produces = ["application/json"])
+    fun insertTransaction(@Body transaction: Transaction, request: HttpRequest<*>): HttpResponse<Transaction> {
+        val owner = extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (transaction.owner.isNullOrBlank()) {
+            transaction.owner = owner
         }
-        //throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
-        return HttpResponse.badRequest("could not insert transaction.")
+        BaseController.logger.info("insert - transaction.transactionDate: $transaction")
+        return if (transactionService.insertTransaction(transaction)) {
+            HttpResponse.status<Transaction>(HttpStatus.CREATED).body(transaction)
+        } else {
+            HttpResponse.badRequest()
+        }
     }
 
     // change the account name owner of a given transaction
@@ -161,18 +156,15 @@ class TransactionController(@Inject val transactionService: TransactionService) 
     }
 
     //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'
-    @Delete("/delete/{guid}", produces = ["application/json"])
-    fun deleteTransaction(@PathVariable("guid") guid: String): HttpResponse<String> {
+    @Delete("/{guid}", produces = ["application/json"])
+    fun deleteTransaction(@PathVariable("guid") guid: String): HttpResponse<Transaction> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {
-            if (transactionService.deleteTransactionByGuid(guid)) {
-                return HttpResponse.ok("resource deleted")
-            }
-            return HttpResponse.notFound("transaction not deleted: $guid")
-            //throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+            return if (transactionService.deleteTransactionByGuid(guid))
+                HttpResponse.ok(transactionOption.get())
+            else HttpResponse.notFound()
         }
-        return HttpResponse.notFound("transaction not deleted: $guid")
-        //throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+        return HttpResponse.notFound()
     }
 
     @Get("/active", produces = ["application/json"])
