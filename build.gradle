@@ -64,6 +64,10 @@ dependencies {
     implementation ("org.apache.logging.log4j:log4j-core:$apacheLoggingVersion")
     //graphics
     implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")
+    //graphql
+    implementation("io.micronaut.graphql:micronaut-graphql")
+    implementation("com.graphql-java:graphql-java:${graphqlVersion}")
+    implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlScalarsVersion}")
 
     runtimeOnly("ch.qos.logback:logback-classic:$logbackVersion")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")

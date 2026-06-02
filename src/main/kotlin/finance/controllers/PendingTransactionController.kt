@@ -44,6 +44,25 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
         return HttpResponse.ok(transactions)
     }
 
+    @Get("/select/{id}")
+    @Produces("application/json")
+    fun selectByPendingTransactionId(@PathVariable id: Long): HttpResponse<PendingTransaction> {
+        val result = pendingTransactionService.findByPendingTransactionId(id)
+        return if (result.isPresent) HttpResponse.ok(result.get()) else HttpResponse.notFound()
+    }
+
+    @Put("/update/{id}")
+    @Consumes("application/json")
+    @Produces("application/json")
+    fun updatePendingTransaction(
+        @PathVariable id: Long,
+        @Body pendingTransaction: PendingTransaction
+    ): HttpResponse<PendingTransaction> {
+        val result = pendingTransactionService.updatePendingTransaction(id, pendingTransaction)
+        return if (result.isPresent) HttpResponse.ok(result.get())
+        else throw HttpStatusException(HttpStatus.NOT_FOUND, "Pending transaction not found: $id")
+    }
+
     // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/pending/transaction/delete/all
     @Delete("/delete/all")
     fun deleteAllPendingTransactions(): HttpResponse<Void> {

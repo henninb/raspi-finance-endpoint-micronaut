@@ -9,4 +9,5 @@ import io.micronaut.data.jpa.repository.JpaRepository
 interface ValidationAmountRepository : JpaRepository<ValidationAmount, Long> {
     fun findByTransactionStateAndAccountId(transactionState: TransactionState, accountId: Long): List<ValidationAmount>
     fun findByAccountId(accountId: Long): List<ValidationAmount>
+    fun findByActiveStatusTrue(): List<ValidationAmount>
 }

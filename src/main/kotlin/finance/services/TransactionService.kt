@@ -21,6 +21,11 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import java.util.Base64
+import finance.domain.BonusProgress
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Singleton
 open class TransactionService(
@@ -29,7 +34,8 @@ open class TransactionService(
     @Inject val categoryService: CategoryService,
     @Inject val receiptImageService: ReceiptImageService,
     @Inject val validator: Validator,
-    @Inject val meterService: MeterService
+    @Inject val meterService: MeterService,
+    @Inject val calculationService: CalculationService,
 ) {
 
     @Timed
@@ -446,6 +452,68 @@ open class TransactionService(
         logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
         meterService.incrementExceptionThrownCounter("RuntimeException")
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
+    }
+
+    @Timed
+    open fun findAllActiveTransactions(): List<Transaction> {
+        val transactions = transactionRepository.findByActiveStatusOrderByTransactionDateDesc()
+        return transactions.sortedWith(
+            compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate }
+        )
+    }
+
+    @Timed
+    open fun findTransactionsByCategory(categoryName: String): List<Transaction> =
+        transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName)
+
+    @Timed
+    open fun findTransactionsByDescription(descriptionName: String): List<Transaction> =
+        transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName)
+
+    @Timed
+    open fun findTransactionsByDateRange(startDate: LocalDate, endDate: LocalDate): List<Transaction> {
+        val start = Date.valueOf(startDate)
+        val end = Date.valueOf(endDate)
+        return transactionRepository.findByTransactionDateBetweenAndActiveStatusOrderByTransactionDateDesc(start, end)
+    }
+
+    @Timed
+    open fun deleteReceiptImageForTransactionByGuid(guid: String): Boolean {
+        val transactionOptional = findTransactionByGuid(guid)
+        if (transactionOptional.isPresent) {
+            val transaction = transactionOptional.get()
+            if (transaction.receiptImageId != null) {
+                deleteReceiptImage(transaction)
+                transaction.receiptImageId = null
+                transaction.dateUpdated = Timestamp(nextTimestampMillis())
+                transactionRepository.saveAndFlush(transaction)
+                return true
+            }
+            return false
+        }
+        logger.error("Cannot delete receipt image for transaction that does not exist, guid='$guid'.")
+        throw RuntimeException("Cannot delete receipt image for transaction that does not exist, guid='$guid'.")
+    }
+
+    @Timed
+    open fun findByAccountNameOwnerPaged(accountNameOwner: String, pageable: Pageable): Page<Transaction> =
+        transactionRepository.findByAccountNameOwnerAndActiveStatus(accountNameOwner, true, pageable)
+
+    @Timed
+    open fun getBonusProgress(
+        accountNameOwner: String,
+        startDate: LocalDate,
+        targetAmount: BigDecimal,
+        bonusAmount: BigDecimal,
+        windowDays: Long = 90L,
+    ): BonusProgress = calculationService.calculateBonusProgress(
+        accountNameOwner, startDate, targetAmount, bonusAmount, windowDays
+    )
+
+    @Timed
+    open fun insertFutureTransaction(transaction: Transaction): Transaction {
+        val future = createFutureTransaction(transaction)
+        return transactionRepository.saveAndFlush(future)
     }
 
     @Timed

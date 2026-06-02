@@ -35,6 +35,22 @@ class TransferController(private var transferService: TransferService) : BaseCon
         }
     }
 
+    @Get("/select/{transferId}")
+    @Produces("application/json")
+    fun selectByTransferId(@PathVariable transferId: Long): HttpResponse<Transfer> {
+        val result = transferService.findByTransferId(transferId)
+        return if (result.isPresent) HttpResponse.ok(result.get()) else HttpResponse.notFound()
+    }
+
+    @Put("/update/{transferId}")
+    @Consumes("application/json")
+    @Produces("application/json")
+    fun updateTransfer(@PathVariable transferId: Long, @Body transfer: Transfer): HttpResponse<Transfer> {
+        val result = transferService.updateTransfer(transferId, transfer)
+        return if (result.isPresent) HttpResponse.ok(result.get())
+        else throw HttpStatusException(HttpStatus.NOT_FOUND, "Transfer not found: $transferId")
+    }
+
     // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/transfer/delete/1001
     @Delete("/delete/{transferId}")
     @Produces("application/json")

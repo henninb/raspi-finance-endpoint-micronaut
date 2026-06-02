@@ -61,4 +61,19 @@ class FamilyMemberController(@Inject val familyMemberService: FamilyMemberServic
         val updated = familyMemberService.updateActiveStatus(familyMemberId, false)
         return if (updated) HttpResponse.ok("family member deactivated") else HttpResponse.notFound()
     }
+
+    @Get("/owner/{owner}", produces = ["application/json"])
+    fun selectByOwner(@PathVariable owner: String): HttpResponse<List<FamilyMember>> {
+        val members = familyMemberService.findByOwner(owner)
+        return if (members.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(members)
+    }
+
+    @Get("/owner/{owner}/relationship/{relationship}", produces = ["application/json"])
+    fun selectByOwnerAndRelationship(
+        @PathVariable owner: String,
+        @PathVariable relationship: FamilyRelationship
+    ): HttpResponse<List<FamilyMember>> {
+        val members = familyMemberService.findByOwnerAndRelationship(owner, relationship)
+        return if (members.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(members)
+    }
 }

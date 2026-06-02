@@ -1,13 +1,17 @@
 package finance.controllers
 
 import finance.domain.Account
+import finance.domain.BonusProgress
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.TransactionService
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.*
 import jakarta.inject.Inject
 
@@ -169,6 +173,81 @@ class TransactionController(@Inject val transactionService: TransactionService) 
         }
         return HttpResponse.notFound("transaction not deleted: $guid")
         //throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+    }
+
+    @Get("/active", produces = ["application/json"])
+    fun selectAllActiveTransactions(): HttpResponse<List<Transaction>> {
+        val transactions = transactionService.findAllActiveTransactions()
+        if (transactions.isEmpty()) {
+            return HttpResponse.notFound()
+        }
+        return HttpResponse.ok(transactions)
+    }
+
+    @Get("/category/{categoryName}", produces = ["application/json"])
+    fun selectTransactionsByCategory(@PathVariable categoryName: String): HttpResponse<List<Transaction>> {
+        val transactions = transactionService.findTransactionsByCategory(categoryName)
+        if (transactions.isEmpty()) {
+            return HttpResponse.notFound()
+        }
+        return HttpResponse.ok(transactions)
+    }
+
+    @Get("/description/{descriptionName}", produces = ["application/json"])
+    fun selectTransactionsByDescription(@PathVariable descriptionName: String): HttpResponse<List<Transaction>> {
+        val transactions = transactionService.findTransactionsByDescription(descriptionName)
+        if (transactions.isEmpty()) {
+            return HttpResponse.notFound()
+        }
+        return HttpResponse.ok(transactions)
+    }
+
+    @Get("/date-range", produces = ["application/json"])
+    fun selectTransactionsByDateRange(
+        @QueryValue startDate: LocalDate,
+        @QueryValue endDate: LocalDate
+    ): HttpResponse<List<Transaction>> {
+        val transactions = transactionService.findTransactionsByDateRange(startDate, endDate)
+        if (transactions.isEmpty()) {
+            return HttpResponse.notFound()
+        }
+        return HttpResponse.ok(transactions)
+    }
+
+    @Get("/account/select/{accountNameOwner}/paged", produces = ["application/json"])
+    fun selectByAccountNameOwnerPaged(
+        @PathVariable accountNameOwner: String,
+        pageable: Pageable
+    ): HttpResponse<Page<Transaction>> {
+        val page = transactionService.findByAccountNameOwnerPaged(accountNameOwner, pageable)
+        return HttpResponse.ok(page)
+    }
+
+    @Get("/account/bonus-progress/{accountNameOwner}", produces = ["application/json"])
+    fun getBonusProgress(
+        @PathVariable accountNameOwner: String,
+        @QueryValue startDate: LocalDate,
+        @QueryValue targetAmount: BigDecimal,
+        @QueryValue bonusAmount: BigDecimal,
+        @QueryValue(defaultValue = "90") windowDays: Long
+    ): HttpResponse<BonusProgress> {
+        val progress = transactionService.getBonusProgress(accountNameOwner, startDate, targetAmount, bonusAmount, windowDays)
+        return HttpResponse.ok(progress)
+    }
+
+    @Post("/future", consumes = ["application/json"], produces = ["application/json"])
+    fun insertFutureTransaction(@Body transaction: Transaction): HttpResponse<Transaction> {
+        val future = transactionService.insertFutureTransaction(transaction)
+        return HttpResponse.ok(future)
+    }
+
+    @Delete("/receipt/image/{guid}", produces = ["application/json"])
+    fun deleteTransactionReceiptImageByGuid(@PathVariable guid: String): HttpResponse<String> {
+        return if (transactionService.deleteReceiptImageForTransactionByGuid(guid)) {
+            HttpResponse.ok("receipt image deleted")
+        } else {
+            HttpResponse.notFound("no receipt image found for guid: $guid")
+        }
     }
 
     //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/payment/required

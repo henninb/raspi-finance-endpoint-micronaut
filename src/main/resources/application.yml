@@ -32,6 +32,9 @@ micronaut:
     name: raspi-finance-enpoint-micronaut
   metrics:
     enabled: true
+  graphql:
+    enabled: true
+    path: /graphql
 
 datasources:
   default:

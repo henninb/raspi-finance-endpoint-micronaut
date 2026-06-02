@@ -12,6 +12,39 @@ import java.util.*
 @Controller("/validation/amount")
 class ValidationAmountController(private var validationAmountService: ValidationAmountService) : BaseController() {
 
+    @Get("/active")
+    @Produces("application/json")
+    fun selectAllActive(): HttpResponse<List<ValidationAmount>> {
+        val results = validationAmountService.findAllActive()
+        return if (results.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(results)
+    }
+
+    @Get("/select/{validationId}")
+    @Produces("application/json")
+    fun selectById(@PathVariable validationId: Long): HttpResponse<ValidationAmount> {
+        val result = validationAmountService.findById(validationId)
+        return if (result.isPresent) HttpResponse.ok(result.get()) else HttpResponse.notFound()
+    }
+
+    @Put("/update/{validationId}")
+    @Consumes("application/json")
+    @Produces("application/json")
+    fun updateValidationAmount(
+        @PathVariable validationId: Long,
+        @Body validationAmount: ValidationAmount
+    ): HttpResponse<ValidationAmount> {
+        val result = validationAmountService.updateValidationAmount(validationId, validationAmount)
+        return if (result.isPresent) HttpResponse.ok(result.get())
+        else throw HttpStatusException(HttpStatus.NOT_FOUND, "Validation amount not found: $validationId")
+    }
+
+    @Delete("/delete/{validationId}")
+    @Produces("application/json")
+    fun deleteById(@PathVariable validationId: Long): HttpResponse<Void> {
+        return if (validationAmountService.deleteById(validationId)) HttpResponse.noContent()
+        else throw HttpStatusException(HttpStatus.NOT_FOUND, "Validation amount not found: $validationId")
+    }
+
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionDate": "2024-01-01", "amount": 100.00}' https://localhost:8443/validation/amount/insert/test_brian
     @Post("/insert/{accountNameOwner}")
     @Consumes("application/json")

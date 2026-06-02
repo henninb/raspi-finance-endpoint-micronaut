@@ -114,6 +114,32 @@ class AccountController(@Inject val accountService: AccountService) {
         return HttpResponse.badRequest("could not rename this account: ${oldAccountNameOwner}.")
     }
 
+    @Get(value = "/validation/refresh", produces = ["application/json"])
+    fun refreshValidationDates(): HttpResponse<Void> {
+        accountService.refreshValidationDates()
+        return HttpResponse.ok()
+    }
+
+    @Put(value = "/deactivate/{accountNameOwner}", produces = ["application/json"])
+    fun deactivateAccount(@PathVariable accountNameOwner: String): HttpResponse<Account> {
+        return try {
+            val account = accountService.deactivateAccount(accountNameOwner)
+            HttpResponse.ok(account)
+        } catch (e: RuntimeException) {
+            HttpResponse.notFound()
+        }
+    }
+
+    @Put(value = "/activate/{accountNameOwner}", produces = ["application/json"])
+    fun activateAccount(@PathVariable accountNameOwner: String): HttpResponse<Account> {
+        return try {
+            val account = accountService.activateAccount(accountNameOwner)
+            HttpResponse.ok(account)
+        } catch (e: RuntimeException) {
+            HttpResponse.notFound()
+        }
+    }
+
     companion object {
         private val mapper = ObjectMapper()
     }

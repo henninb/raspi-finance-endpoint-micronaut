@@ -123,6 +123,21 @@ open class TransferService(
     }
 
     @Timed
+    open fun updateTransfer(transferId: Long, transfer: Transfer): Optional<Transfer> {
+        val existing = transferRepository.findByTransferId(transferId)
+        if (existing.isPresent) {
+            val toUpdate = existing.get()
+            toUpdate.sourceAccount = transfer.sourceAccount
+            toUpdate.destinationAccount = transfer.destinationAccount
+            toUpdate.transactionDate = transfer.transactionDate
+            toUpdate.amount = transfer.amount
+            toUpdate.activeStatus = transfer.activeStatus
+            return Optional.of(transferRepository.saveAndFlush(toUpdate))
+        }
+        return Optional.empty()
+    }
+
+    @Timed
     override fun findByTransferId(transferId: Long): Optional<Transfer> {
         logger.info("service - findByTransferId = $transferId")
         val transferOptional: Optional<Transfer> = transferRepository.findByTransferId(transferId)

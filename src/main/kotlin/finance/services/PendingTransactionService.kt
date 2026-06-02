@@ -28,8 +28,24 @@ open class PendingTransactionService(
         return pendingTransactionRepository.findAll()
     }
 
-    override fun deleteAllPendingTransactions() : Boolean {
+    override fun deleteAllPendingTransactions(): Boolean {
         pendingTransactionRepository.deleteAll()
         return true
+    }
+
+    open fun findByPendingTransactionId(id: Long): Optional<PendingTransaction> =
+        pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(id)
+
+    open fun updatePendingTransaction(id: Long, pendingTransaction: PendingTransaction): Optional<PendingTransaction> {
+        val existing = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(id)
+        if (existing.isPresent) {
+            val toUpdate = existing.get()
+            toUpdate.accountNameOwner = pendingTransaction.accountNameOwner
+            toUpdate.description = pendingTransaction.description
+            toUpdate.amount = pendingTransaction.amount
+            toUpdate.transactionDate = pendingTransaction.transactionDate
+            return Optional.of(pendingTransactionRepository.saveAndFlush(toUpdate))
+        }
+        return Optional.empty()
     }
 }

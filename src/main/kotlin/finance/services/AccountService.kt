@@ -186,6 +186,40 @@ open class AccountService(
         return true
     }
 
+    @Timed
+    open fun refreshValidationDates() {
+        try {
+            accountRepository.updateValidationDateForAllAccounts()
+            logger.info("Refreshed validation dates for all active accounts")
+        } catch (e: Exception) {
+            logger.warn("Could not refresh validation dates: ${e.message}")
+        }
+    }
+
+    @Timed
+    open fun deactivateAccount(accountNameOwner: String): Account {
+        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
+        if (!accountOptional.isPresent) {
+            throw RuntimeException("Account not found: $accountNameOwner")
+        }
+        val account = accountOptional.get()
+        account.activeStatus = false
+        account.dateUpdated = Timestamp(System.currentTimeMillis())
+        return accountRepository.saveAndFlush(account)
+    }
+
+    @Timed
+    open fun activateAccount(accountNameOwner: String): Account {
+        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
+        if (!accountOptional.isPresent) {
+            throw RuntimeException("Account not found: $accountNameOwner")
+        }
+        val account = accountOptional.get()
+        account.activeStatus = true
+        account.dateUpdated = Timestamp(System.currentTimeMillis())
+        return accountRepository.saveAndFlush(account)
+    }
+
     companion object {
         private val mapper = ObjectMapper()
         private val logger = LogManager.getLogger()

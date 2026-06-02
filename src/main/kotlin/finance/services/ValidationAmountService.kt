@@ -78,4 +78,33 @@ open class ValidationAmountService(
         logger.warn("Account not found: $accountNameOwner")
         return ValidationAmount()
     }
+
+    open fun findAllActive(): List<ValidationAmount> =
+        validationAmountRepository.findByActiveStatusTrue()
+
+    open fun findById(validationId: Long): Optional<ValidationAmount> =
+        validationAmountRepository.findById(validationId)
+
+    open fun updateValidationAmount(validationId: Long, validationAmount: ValidationAmount): Optional<ValidationAmount> {
+        val existing = validationAmountRepository.findById(validationId)
+        if (existing.isPresent) {
+            val toUpdate = existing.get()
+            toUpdate.amount = validationAmount.amount
+            toUpdate.transactionState = validationAmount.transactionState
+            toUpdate.validationDate = validationAmount.validationDate
+            toUpdate.activeStatus = validationAmount.activeStatus
+            toUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
+            return Optional.of(validationAmountRepository.saveAndFlush(toUpdate))
+        }
+        return Optional.empty()
+    }
+
+    open fun deleteById(validationId: Long): Boolean {
+        val existing = validationAmountRepository.findById(validationId)
+        if (existing.isPresent) {
+            validationAmountRepository.delete(existing.get())
+            return true
+        }
+        return false
+    }
 }

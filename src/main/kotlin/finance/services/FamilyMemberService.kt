@@ -66,6 +66,14 @@ open class FamilyMemberService(
         return rows > 0
     }
 
+    @Timed
+    open fun findByOwner(owner: String): List<FamilyMember> =
+        familyMemberRepository.findByOwnerAndActiveStatusTrue(owner)
+
+    @Timed
+    open fun findByOwnerAndRelationship(owner: String, relationship: FamilyRelationship): List<FamilyMember> =
+        familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
+
     companion object {
         private val logger = LogManager.getLogger()
     }

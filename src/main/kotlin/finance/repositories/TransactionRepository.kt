@@ -5,7 +5,11 @@ import finance.domain.TransactionState
 import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import jakarta.transaction.Transactional
+import java.math.BigDecimal
+import java.sql.Date
 import java.util.*
 
 @Repository
@@ -25,6 +29,52 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         activeStatus: Boolean = true,
         transactionStates: List<TransactionState>
     ): List<Transaction>
+
+    fun findByActiveStatusOrderByTransactionDateDesc(activeStatus: Boolean = true): List<Transaction>
+
+    fun findByCategoryAndActiveStatusOrderByTransactionDateDesc(
+        category: String,
+        activeStatus: Boolean = true
+    ): List<Transaction>
+
+    fun findByDescriptionAndActiveStatusOrderByTransactionDateDesc(
+        description: String,
+        activeStatus: Boolean = true
+    ): List<Transaction>
+
+    fun findByTransactionDateBetweenAndActiveStatusOrderByTransactionDateDesc(
+        startDate: Date,
+        endDate: Date,
+        activeStatus: Boolean = true
+    ): List<Transaction>
+
+    fun findByAccountNameOwnerAndActiveStatus(
+        accountNameOwner: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable
+    ): Page<Transaction>
+
+    @Query(
+        value = "SELECT COALESCE(SUM(t.amount), 0) FROM t_transaction t WHERE t.account_name_owner = :accountNameOwner AND t.transaction_state = :transactionState AND t.transaction_date BETWEEN :startDate AND :endDate AND t.active_status = true",
+        nativeQuery = true
+    )
+    fun sumSpendingInWindow(
+        accountNameOwner: String,
+        transactionState: String,
+        startDate: Date,
+        endDate: Date
+    ): BigDecimal
+
+    @Query(
+        value = "SELECT COALESCE(SUM(t.amount), 0) FROM t_transaction t WHERE t.account_name_owner = :accountNameOwner AND t.transaction_state IN (:transactionStates) AND t.transaction_date BETWEEN :startDate AND :endDate AND t.active_status = true",
+        nativeQuery = true
+    )
+    fun sumPendingSpendingInWindow(
+        accountNameOwner: String,
+        transactionStates: List<String>,
+        startDate: Date,
+        endDate: Date
+    ): BigDecimal
 
     @Transactional
     @Query(

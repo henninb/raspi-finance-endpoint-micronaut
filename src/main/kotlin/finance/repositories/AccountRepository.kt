@@ -69,5 +69,10 @@ interface AccountRepository : JpaRepository<Account, Long> {
     )
     fun findAccountsThatRequirePayment(): List<String>
 
-
+    @Transactional
+    @Query(
+        value = "UPDATE t_account SET validation_date = NOW(), date_updated = NOW() WHERE active_status = true",
+        nativeQuery = true
+    )
+    fun updateValidationDateForAllAccounts()
 }

@@ -1,0 +1,269 @@
+scalar BigDecimal
+scalar Date
+scalar DateTime
+scalar Long
+
+type Query {
+    accounts: [Account!]!
+    account(accountNameOwner: String!): Account
+    transactions(accountNameOwner: String!): [Transaction!]!
+    transaction(guid: String!): Transaction
+    categories: [Category!]!
+    category(categoryName: String!): Category
+    descriptions: [Description!]!
+    description(descriptionName: String!): Description
+    payments: [Payment!]!
+    payment(paymentId: Long!): Payment
+    transfers: [Transfer!]!
+    transfer(transferId: Long!): Transfer
+    parameters: [Parameter!]!
+    validationAmounts: [ValidationAmount!]!
+    receiptImages: [ReceiptImage!]!
+    medicalExpenses: [MedicalExpense!]!
+    medicalExpense(medicalExpenseId: Long!): MedicalExpense
+    medicalExpensesByClaimStatus(claimStatus: String!): [MedicalExpense!]!
+}
+
+type Mutation {
+    createAccount(account: AccountInput!): Account!
+    updateAccount(account: AccountInput!, oldAccountNameOwner: String): Account!
+    deleteAccount(accountNameOwner: String!): Boolean!
+
+    createTransaction(transaction: TransactionInput!): Transaction!
+    updateTransaction(transaction: TransactionInput!): Transaction!
+    deleteTransaction(guid: String!): Boolean!
+
+    createCategory(category: CategoryInput!): Category!
+    updateCategory(category: CategoryInput!, oldCategoryName: String): Category!
+    deleteCategory(categoryName: String!): Boolean!
+
+    createDescription(description: DescriptionInput!): Description!
+    updateDescription(description: DescriptionInput!, oldDescriptionName: String): Description!
+    deleteDescription(descriptionName: String!): Boolean!
+
+    createPayment(payment: PaymentInput!): Payment!
+    updatePayment(id: Long!, payment: PaymentInput!): Payment!
+    deletePayment(id: Long!): Boolean!
+
+    createTransfer(transfer: TransferInput!): Transfer!
+    updateTransfer(id: Long!, transfer: TransferInput!): Transfer!
+    deleteTransfer(id: Long!): Boolean!
+
+    createParameter(parameter: ParameterInput!): Parameter!
+    updateParameter(parameter: ParameterInput!): Parameter!
+    deleteParameter(parameterId: Long!): Boolean!
+
+    createValidationAmount(validationAmount: ValidationAmountInput!): ValidationAmount!
+    updateValidationAmount(validationAmount: ValidationAmountInput!): ValidationAmount!
+    deleteValidationAmount(validationId: Long!): Boolean!
+
+    createMedicalExpense(medicalExpense: MedicalExpenseInput!): MedicalExpense!
+    updateMedicalExpense(medicalExpense: MedicalExpenseInput!): MedicalExpense!
+    deleteMedicalExpense(medicalExpenseId: Long!): Boolean!
+}
+
+type Account {
+    accountId: Long
+    accountNameOwner: String!
+    accountType: String!
+    activeStatus: Boolean!
+    moniker: String
+    totals: BigDecimal
+    totalsBalanced: BigDecimal
+    cleared: BigDecimal
+    outstanding: BigDecimal
+    future: BigDecimal
+}
+
+type Transaction {
+    transactionId: Long
+    guid: String!
+    accountId: Long
+    accountNameOwner: String!
+    accountType: String!
+    transactionType: String!
+    transactionDate: Date!
+    description: String!
+    category: String!
+    amount: BigDecimal!
+    transactionState: String!
+    activeStatus: Boolean!
+    reoccurringType: String
+    notes: String
+    dueDate: Date
+    receiptImageId: Long
+}
+
+type Category {
+    categoryId: Long
+    categoryName: String!
+    activeStatus: Boolean!
+}
+
+type Description {
+    descriptionId: Long
+    descriptionName: String!
+    activeStatus: Boolean!
+}
+
+type Payment {
+    paymentId: Long
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
+    amount: BigDecimal!
+    guidSource: String
+    guidDestination: String
+    activeStatus: Boolean!
+}
+
+type Transfer {
+    transferId: Long
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
+    amount: BigDecimal!
+    guidSource: String
+    guidDestination: String
+    activeStatus: Boolean!
+}
+
+type Parameter {
+    parameterId: Long
+    parameterName: String!
+    parameterValue: String!
+    activeStatus: Boolean!
+}
+
+type ValidationAmount {
+    validationId: Long
+    accountId: Long!
+    validationDate: DateTime
+    activeStatus: Boolean!
+    transactionState: String!
+    amount: BigDecimal!
+}
+
+type ReceiptImage {
+    receiptImageId: Long
+    transactionId: Long
+    activeStatus: Boolean!
+    imageFormatType: String
+}
+
+type MedicalExpense {
+    medicalExpenseId: Long
+    transactionId: Long
+    providerId: Long
+    familyMemberId: Long
+    serviceDate: Date
+    serviceDescription: String
+    procedureCode: String
+    diagnosisCode: String
+    billedAmount: BigDecimal
+    insuranceDiscount: BigDecimal
+    insurancePaid: BigDecimal
+    patientResponsibility: BigDecimal
+    paidDate: Date
+    isOutOfNetwork: Boolean
+    claimNumber: String
+    claimStatus: String
+    activeStatus: Boolean
+    paidAmount: BigDecimal
+}
+
+input AccountInput {
+    accountId: Long
+    accountNameOwner: String!
+    accountType: String!
+    activeStatus: Boolean
+    moniker: String
+    outstanding: BigDecimal
+    cleared: BigDecimal
+    future: BigDecimal
+}
+
+input TransactionInput {
+    transactionId: Long
+    guid: String
+    accountId: Long
+    accountType: String!
+    transactionType: String!
+    accountNameOwner: String!
+    transactionDate: Date!
+    description: String!
+    category: String!
+    amount: BigDecimal!
+    transactionState: String!
+    activeStatus: Boolean
+    reoccurringType: String
+    notes: String
+    dueDate: Date
+    receiptImageId: Long
+}
+
+input CategoryInput {
+    categoryId: Long
+    categoryName: String!
+    activeStatus: Boolean
+}
+
+input DescriptionInput {
+    descriptionId: Long
+    descriptionName: String!
+    activeStatus: Boolean
+}
+
+input PaymentInput {
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
+    amount: BigDecimal!
+    activeStatus: Boolean
+}
+
+input TransferInput {
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
+    amount: BigDecimal!
+    activeStatus: Boolean
+}
+
+input ParameterInput {
+    parameterId: Long
+    parameterName: String!
+    parameterValue: String!
+    activeStatus: Boolean
+}
+
+input ValidationAmountInput {
+    validationId: Long
+    accountId: Long
+    accountNameOwner: String
+    validationDate: DateTime
+    activeStatus: Boolean
+    transactionState: String!
+    amount: BigDecimal!
+}
+
+input MedicalExpenseInput {
+    medicalExpenseId: Long
+    transactionId: Long
+    providerId: Long
+    familyMemberId: Long
+    serviceDate: Date
+    serviceDescription: String
+    procedureCode: String
+    diagnosisCode: String
+    billedAmount: BigDecimal
+    insuranceDiscount: BigDecimal
+    insurancePaid: BigDecimal
+    patientResponsibility: BigDecimal
+    paidDate: Date
+    isOutOfNetwork: Boolean
+    claimNumber: String
+    claimStatus: String
+    activeStatus: Boolean
+    paidAmount: BigDecimal
+}
