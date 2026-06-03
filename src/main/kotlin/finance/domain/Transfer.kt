@@ -40,6 +40,7 @@ data class Transfer(
 
     @field:ValidDate
     @param:JsonProperty
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     var transactionDate: LocalDate,
 
     @param:JsonProperty

@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -58,6 +59,7 @@ data class Payment(
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     @JsonProperty
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     var transactionDate: LocalDate,
 
     @JsonProperty

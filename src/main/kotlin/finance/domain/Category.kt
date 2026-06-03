@@ -3,6 +3,7 @@ package finance.domain
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import jakarta.persistence.Transient
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
@@ -45,6 +46,10 @@ data class Category(
     @JsonProperty
     var categoryName: String
 ) {
+    @Transient
+    @JsonProperty
+    var categoryCount: Long = 0
+
     constructor() : this(0L, "", true, "")
 
     @JsonIgnore

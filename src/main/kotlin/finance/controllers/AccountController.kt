@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.services.AccountService
 import finance.services.OwnerExtractorService
+import finance.services.TransactionService
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -16,6 +17,7 @@ import java.util.*
 class AccountController(
     @Inject val accountService: AccountService,
     @Inject val ownerExtractorService: OwnerExtractorService,
+    @Inject val transactionService: TransactionService,
 ) {
 
     @Get(value = "/active", produces = ["application/json"])
@@ -75,9 +77,9 @@ class AccountController(
     }
 
     @Get(value = "/payment/required", produces = ["application/json"])
-    fun selectPaymentRequired(): HttpResponse<List<String>> {
-        val accountNameOwners = accountService.findAccountsThatRequirePayment()
-        return if (accountNameOwners.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(accountNameOwners)
+    fun selectPaymentRequired(): HttpResponse<List<Account>> {
+        val accounts = transactionService.findAccountsThatRequirePayment()
+        return if (accounts.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(accounts)
     }
 
     @Put(value = "/rename", produces = [MediaType.APPLICATION_JSON])
@@ -105,6 +107,9 @@ class AccountController(
     }
 
     companion object {
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().apply {
+            findAndRegisterModules()
+            disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        }
     }
 }

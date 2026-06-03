@@ -55,7 +55,14 @@ open class CategoryService(
 
     @Timed
     open fun fetchAllActiveCategories(): List<Category> {
-        return categoryRepository.findByActiveStatusOrderByCategoryName(true)
+        val categories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
+        if (categories.isNotEmpty()) {
+            val countMap = transactionRepository
+                .countByCategoryNameIn(categories.map { it.categoryName })
+                .associate { row -> row[0] as String to row[1] as Long }
+            categories.forEach { it.categoryCount = countMap[it.categoryName] ?: 0L }
+        }
+        return categories
     }
 
     @Timed

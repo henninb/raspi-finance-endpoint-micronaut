@@ -2,6 +2,8 @@ package finance.domain
 
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import finance.utils.FlexibleLocalDateDeserializer
 import finance.utils.*
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
@@ -65,6 +67,8 @@ data class Transaction(
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     @JsonProperty
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = FlexibleLocalDateDeserializer::class)
     var transactionDate: LocalDate,
 
     @JsonProperty
@@ -115,6 +119,8 @@ data class Transaction(
 
     @Column(name = "due_date", columnDefinition = "DATE", nullable = true)
     @JsonProperty
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = FlexibleLocalDateDeserializer::class)
     var dueDate: LocalDate? = null
 
     @JsonIgnore
@@ -164,7 +170,10 @@ data class Transaction(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().apply {
+            findAndRegisterModules()
+            disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        }
 
         @JsonIgnore
         private val logger = LogManager.getLogger(Transaction::class.java)

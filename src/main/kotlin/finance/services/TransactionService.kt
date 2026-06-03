@@ -237,9 +237,10 @@ open class TransactionService(
 
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
+            transaction.transactionId = transactionFromDatabase.transactionId
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            transactionRepository.saveAndFlush(transaction)
+            transactionRepository.update(transaction)
             logger.info("successfully updated ${transaction.guid}")
 
             if (transaction.transactionState == TransactionState.Cleared &&

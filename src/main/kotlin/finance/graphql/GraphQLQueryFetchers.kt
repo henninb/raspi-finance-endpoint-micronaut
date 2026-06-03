@@ -102,7 +102,7 @@ class GraphQLQueryFetchers(
 
     fun parameters() = DataFetcher { _ ->
         logger.info("GraphQL - fetching all parameters")
-        emptyList<Any>()
+        parameterService.findAllActive()
     }
 
     fun validationAmounts() = DataFetcher { _ ->

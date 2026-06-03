@@ -1,17 +1,17 @@
 package finance.utils
 
 import org.apache.logging.log4j.LogManager
-import java.sql.Date
+import java.time.LocalDate
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
 
-class DateValidator : ConstraintValidator<ValidDate, Date> {
+class DateValidator : ConstraintValidator<ValidDate, LocalDate> {
     override fun initialize(constraintAnnotation: ValidDate) {
     }
 
-    override fun isValid(value: Date, context: ConstraintValidatorContext): Boolean {
+    override fun isValid(value: LocalDate, context: ConstraintValidatorContext): Boolean {
         logger.debug("dateToBeEvaluated: $value")
-        return value > Date.valueOf("2000-01-01")
+        return value.isAfter(LocalDate.of(2000, 1, 1))
     }
 
     companion object {

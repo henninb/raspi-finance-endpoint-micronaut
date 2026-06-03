@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -101,7 +102,8 @@ data class Account(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    @JsonIgnore
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "validation_date", nullable = false)
     var validationDate: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
@@ -116,6 +118,9 @@ data class Account(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().apply {
+            findAndRegisterModules()
+            disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        }
     }
 }

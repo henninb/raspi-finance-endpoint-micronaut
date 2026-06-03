@@ -83,6 +83,12 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     )
     fun bulkUpdateCategory(oldCategory: String, newCategory: String): Int
 
+    @Query("SELECT t.category, COUNT(t) FROM Transaction t WHERE t.category IN :categoryNames GROUP BY t.category")
+    fun countByCategoryNameIn(categoryNames: List<String>): List<Array<Any>>
+
+    @Query("SELECT t.description, COUNT(t) FROM Transaction t WHERE t.description IN :descriptionNames GROUP BY t.description")
+    fun countByDescriptionNameIn(descriptionNames: List<String>): List<Array<Any>>
+
     @Transactional
     @Query(
         value = "UPDATE t_transaction SET description = :newDescription WHERE description = :oldDescription AND active_status = true",

@@ -1,6 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -61,6 +62,7 @@ data class MedicalExpense(
     @Column(name = "service_date", nullable = false)
     @field:NotNull(message = "Service date cannot be null")
     @field:ValidDate
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     var serviceDate: LocalDate = LocalDate.of(1900, 1, 1),
     @Column(name = "service_description")
     @field:Size(max = 500, message = "Service description cannot exceed 500 characters")
@@ -105,6 +107,7 @@ data class MedicalExpense(
     var patientResponsibility: BigDecimal = BigDecimal.ZERO,
     @Column(name = "paid_date")
     @field:ValidDate
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     var paidDate: LocalDate? = null,
     @Column(name = "is_out_of_network", nullable = false)
     @field:NotNull(message = "Out of network status cannot be null")

@@ -107,6 +107,7 @@ type Category {
     categoryId: Long
     categoryName: String!
     activeStatus: Boolean!
+    categoryCount: Long
     owner: String
     dateAdded: DateTime
     dateUpdated: DateTime
@@ -116,6 +117,7 @@ type Description {
     descriptionId: Long
     descriptionName: String!
     activeStatus: Boolean!
+    descriptionCount: Long
     owner: String
     dateAdded: DateTime
     dateUpdated: DateTime

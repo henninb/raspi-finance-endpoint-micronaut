@@ -44,6 +44,10 @@ micronaut:
     enabled: true
     path: /graphql
 
+jackson:
+  serialization:
+    writeDatesAsTimestamps: false
+
 datasources:
   default:
     url: ${DATASOURCE:jdbc:postgresql://192.168.10.10:5432/finance_db}

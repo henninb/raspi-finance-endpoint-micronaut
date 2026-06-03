@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -32,6 +33,7 @@ data class ValidationAmount(
     var accountId: Long,
 
     //@field:ValidTimestamp
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     @param:JsonProperty
     @Column(name = "validation_date", nullable = false)
     var validationDate: Timestamp,
@@ -70,6 +72,9 @@ data class ValidationAmount(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().apply {
+            findAndRegisterModules()
+            disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        }
     }
 }

@@ -41,6 +41,10 @@ data class Description(
     @JsonProperty
     var descriptionName: String
 ) {
+    @Transient
+    @JsonProperty
+    var descriptionCount: Long = 0
+
     constructor() : this(0L, "", true, "")
 
     @JsonIgnore

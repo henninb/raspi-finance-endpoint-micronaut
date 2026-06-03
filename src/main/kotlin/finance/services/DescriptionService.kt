@@ -45,7 +45,14 @@ open class DescriptionService(
 
     @Timed
     open fun fetchAllDescriptions(): List<Description> {
-        return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
+        val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
+        if (descriptions.isNotEmpty()) {
+            val countMap = transactionRepository
+                .countByDescriptionNameIn(descriptions.map { it.descriptionName })
+                .associate { row -> row[0] as String to row[1] as Long }
+            descriptions.forEach { it.descriptionCount = countMap[it.descriptionName] ?: 0L }
+        }
+        return descriptions
     }
 
     @Timed
