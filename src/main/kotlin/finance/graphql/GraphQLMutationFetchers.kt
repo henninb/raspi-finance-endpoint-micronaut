@@ -58,6 +58,11 @@ class GraphQLMutationFetchers(
         account.accountType = AccountType.valueOf((input["accountType"] as String).replaceFirstChar { it.uppercaseChar() })
         account.activeStatus = input["activeStatus"] as? Boolean ?: true
         account.moniker = input["moniker"] as? String ?: "0000"
+        account.billingStatementCloseDay = (input["billingStatementCloseDay"] as? Int)?.toShort()
+        account.billingGracePeriodDays = (input["billingGracePeriodDays"] as? Int)?.toShort()
+        account.billingDueDaySameMonth = (input["billingDueDaySameMonth"] as? Int)?.toShort()
+        account.billingDueDayNextMonth = (input["billingDueDayNextMonth"] as? Int)?.toShort()
+        account.billingCycleWeekendShift = input["billingCycleWeekendShift"] as? String
         accountService.insertAccount(account)
         accountService.findByAccountNameOwner(account.accountNameOwner).orElseThrow { RuntimeException("Account not found after insert") }
     }
@@ -71,6 +76,11 @@ class GraphQLMutationFetchers(
         existing.accountNameOwner = input["accountNameOwner"] as String
         existing.accountType = AccountType.valueOf((input["accountType"] as String).replaceFirstChar { it.uppercaseChar() })
         existing.activeStatus = input["activeStatus"] as? Boolean ?: true
+        existing.billingStatementCloseDay = (input["billingStatementCloseDay"] as? Int)?.toShort()
+        existing.billingGracePeriodDays = (input["billingGracePeriodDays"] as? Int)?.toShort()
+        existing.billingDueDaySameMonth = (input["billingDueDaySameMonth"] as? Int)?.toShort()
+        existing.billingDueDayNextMonth = (input["billingDueDayNextMonth"] as? Int)?.toShort()
+        existing.billingCycleWeekendShift = input["billingCycleWeekendShift"] as? String
         accountService.updateAccount(existing)
         existing
     }

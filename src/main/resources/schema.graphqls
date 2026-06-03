@@ -78,6 +78,11 @@ type Account {
     validationDate: DateTime
     dateAdded: DateTime
     dateUpdated: DateTime
+    billingStatementCloseDay: Int
+    billingGracePeriodDays: Int
+    billingDueDaySameMonth: Int
+    billingDueDayNextMonth: Int
+    billingCycleWeekendShift: String
 }
 
 type Transaction {
@@ -216,6 +221,11 @@ input AccountInput {
     cleared: BigDecimal
     future: BigDecimal
     owner: String
+    billingStatementCloseDay: Int
+    billingGracePeriodDays: Int
+    billingDueDaySameMonth: Int
+    billingDueDayNextMonth: Int
+    billingCycleWeekendShift: String
 }
 
 input TransactionInput {

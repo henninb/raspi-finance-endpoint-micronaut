@@ -111,6 +111,26 @@ data class Account(
     @Column(name = "date_closed", nullable = false)
     var dateClosed: Timestamp = Timestamp(0)
 
+    @JsonProperty
+    @Column(name = "billing_statement_close_day", nullable = true)
+    var billingStatementCloseDay: Short? = null
+
+    @JsonProperty
+    @Column(name = "billing_grace_period_days", nullable = true)
+    var billingGracePeriodDays: Short? = null
+
+    @JsonProperty
+    @Column(name = "billing_due_day_same_month", nullable = true)
+    var billingDueDaySameMonth: Short? = null
+
+    @JsonProperty
+    @Column(name = "billing_due_day_next_month", nullable = true)
+    var billingDueDayNextMonth: Short? = null
+
+    @JsonProperty
+    @Column(name = "billing_cycle_weekend_shift", nullable = true)
+    var billingCycleWeekendShift: String? = null
+
     override fun toString(): String {
         //mapper.setTimeZone(TimeZone.getDefault())
         return mapper.writeValueAsString(this)
