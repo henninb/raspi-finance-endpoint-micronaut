@@ -2,8 +2,8 @@ package finance.graphql
 
 import graphql.GraphQL
 import graphql.GraphQLContext
-import graphql.Scalars
 import graphql.execution.CoercedVariables
+import graphql.language.IntValue
 import graphql.language.StringValue
 import graphql.language.Value
 import graphql.scalars.ExtendedScalars
@@ -61,6 +61,34 @@ private val timestampDateTimeScalar: GraphQLScalarType = GraphQLScalarType.newSc
     })
     .build()
 
+private val idScalar: GraphQLScalarType = GraphQLScalarType.newScalar()
+    .name("ID")
+    .description("ID scalar coerced to Long for numeric identifiers")
+    .coercing(object : Coercing<Long, String> {
+        override fun serialize(dataFetcherResult: Any, graphQLContext: GraphQLContext, locale: Locale): String =
+            dataFetcherResult.toString()
+
+        override fun parseValue(input: Any, graphQLContext: GraphQLContext, locale: Locale): Long =
+            when (input) {
+                is Long -> input
+                is Int -> input.toLong()
+                is String -> input.toLongOrNull()
+                    ?: throw CoercingParseValueException("Cannot coerce '$input' to Long")
+                else -> throw CoercingParseValueException("Expected String or Int but was '${input.javaClass}'")
+            }
+
+        override fun parseLiteral(
+            input: Value<*>, variables: CoercedVariables, graphQLContext: GraphQLContext, locale: Locale
+        ): Long =
+            when (input) {
+                is IntValue -> input.value.longValueExact()
+                is StringValue -> input.value.toLongOrNull()
+                    ?: throw CoercingParseLiteralException("Cannot coerce '${input.value}' to Long")
+                else -> throw CoercingParseLiteralException("Expected IntValue or StringValue but was '${input.javaClass}'")
+            }
+    })
+    .build()
+
 @Factory
 class GraphQLFactory(
     @Inject private val queryFetchers: GraphQLQueryFetchers,
@@ -81,7 +109,7 @@ class GraphQLFactory(
             .scalar(ExtendedScalars.Date)
             .scalar(timestampDateTimeScalar)
             .scalar(ExtendedScalars.GraphQLLong)
-            .scalar(Scalars.GraphQLID)
+            .scalar(idScalar)
             .type(TypeRuntimeWiring.newTypeWiring("Query")
                 .dataFetcher("accounts", queryFetchers.accounts())
                 .dataFetcher("account", queryFetchers.account())
@@ -135,7 +163,7 @@ class GraphQLFactory(
 
         val executableSchema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
         val schema = graphql.schema.GraphQLSchema.newSchema(executableSchema)
-            .additionalType(Scalars.GraphQLID)
+            .additionalType(idScalar)
             .build()
         return GraphQL.newGraphQL(schema).build()
     }

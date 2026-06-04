@@ -43,16 +43,16 @@ type Mutation {
     deleteDescription(descriptionName: String!): Boolean!
 
     createPayment(payment: PaymentInput!): Payment!
-    updatePayment(id: Long!, payment: PaymentInput!): Payment!
-    deletePayment(id: Long!): Boolean!
+    updatePayment(id: ID!, payment: PaymentInput!): Payment!
+    deletePayment(id: ID!): Boolean!
 
     createTransfer(transfer: TransferInput!): Transfer!
-    updateTransfer(id: Long!, transfer: TransferInput!): Transfer!
-    deleteTransfer(id: Long!): Boolean!
+    updateTransfer(id: ID!, transfer: TransferInput!): Transfer!
+    deleteTransfer(id: ID!): Boolean!
 
     createParameter(parameter: ParameterInput!): Parameter!
     updateParameter(parameter: ParameterInput!): Parameter!
-    deleteParameter(parameterId: Long!): Boolean!
+    deleteParameter(parameterId: ID!): Boolean!
 
     createValidationAmount(validationAmount: ValidationAmountInput!): ValidationAmount!
     updateValidationAmount(validationAmount: ValidationAmountInput!): ValidationAmount!
