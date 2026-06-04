@@ -36,6 +36,7 @@ open class TransferService(
             meterService.incrementExceptionThrownCounter("RuntimeException")
             throw RuntimeException("Source account not found: ${transfer.sourceAccount}")
         }
+        transfer.owner = optionalSourceAccount.get().owner ?: ""
 
         // Validate destination account
         val optionalDestinationAccount = accountService.account(transfer.destinationAccount)
@@ -119,7 +120,20 @@ open class TransferService(
         logger.info("Deleting transfer with ID: $transferId")
         val transferOptional = transferRepository.findByTransferId(transferId)
         if (transferOptional.isPresent) {
-            transferRepository.delete(transferOptional.get())
+            val transfer = transferOptional.get()
+            val guidSource = transfer.guidSource
+            val guidDestination = transfer.guidDestination
+            // Delete the transfer record first to remove FK references to t_transaction
+            transferRepository.delete(transfer)
+            // Then delete the linked transactions
+            if (!guidSource.isNullOrBlank()) {
+                transactionService.deleteTransactionByGuid(guidSource)
+                logger.info("Deleted source transaction: $guidSource")
+            }
+            if (!guidDestination.isNullOrBlank()) {
+                transactionService.deleteTransactionByGuid(guidDestination)
+                logger.info("Deleted destination transaction: $guidDestination")
+            }
             logger.info("Successfully deleted transfer with ID: $transferId")
             return true
         }

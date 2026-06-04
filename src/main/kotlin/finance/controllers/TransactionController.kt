@@ -13,6 +13,7 @@ import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
+import io.micronaut.http.exceptions.HttpStatusException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
@@ -160,9 +161,17 @@ class TransactionController(
     fun deleteTransaction(@PathVariable("guid") guid: String): HttpResponse<Transaction> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {
-            return if (transactionService.deleteTransactionByGuid(guid))
-                HttpResponse.ok(transactionOption.get())
-            else HttpResponse.notFound()
+            return try {
+                if (transactionService.deleteTransactionByGuid(guid))
+                    HttpResponse.ok(transactionOption.get())
+                else HttpResponse.notFound()
+            } catch (e: Exception) {
+                val msg = e.message ?: e.cause?.message ?: ""
+                if (msg.contains("fk_transfer_guid", ignoreCase = true)) {
+                    throw HttpStatusException(HttpStatus.CONFLICT, "Transaction belongs to a transfer and cannot be deleted directly. Delete the transfer instead.")
+                }
+                throw e
+            }
         }
         return HttpResponse.notFound()
     }
