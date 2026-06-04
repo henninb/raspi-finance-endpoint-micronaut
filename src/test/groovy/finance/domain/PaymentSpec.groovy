@@ -46,6 +46,24 @@ class PaymentSpec extends Specification {
     }
 
     @Unroll
+    void 'test -- JSON deserialization to Payment supports flexible transactionDate #transactionDate'() {
+        given:
+        String payload = """{"sourceAccount":"checking_brian","destinationAccount":"foo_brian","amount":5.12,"transactionDate":$transactionDate}"""
+
+        when:
+        Payment payment = mapper.readValue(payload, Payment)
+
+        then:
+        payment.transactionDate == expectedDate
+
+        where:
+        transactionDate   | expectedDate
+        '"2020-11-12"'    | LocalDate.of(2020, 11, 12)
+        '"2020-11-12Z"'   | LocalDate.of(2020, 11, 12)
+        '1593981072000'   | LocalDate.of(2020, 7, 5)
+    }
+
+    @Unroll
     void 'test -- JSON deserialize to Payment with invalid payload'() {
         when:
         mapper.readValue(payload, Payment)

@@ -1,14 +1,18 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import finance.utils.Constants
 import finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
+import finance.utils.FlexibleLocalDateDeserializer
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import java.math.BigDecimal
@@ -27,6 +31,7 @@ import jakarta.validation.constraints.Size
     uniqueConstraints = [UniqueConstraint(columnNames = ["owner", "destination_account", "transaction_date", "amount"])]
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 data class Payment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,6 +65,8 @@ data class Payment(
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     @JsonProperty
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @field:JsonDeserialize(using = FlexibleLocalDateDeserializer::class)
+    @param:JsonDeserialize(using = FlexibleLocalDateDeserializer::class)
     var transactionDate: LocalDate,
 
     @JsonProperty
@@ -82,6 +89,7 @@ data class Payment(
     var activeStatus: Boolean = true
 ) {
 
+    @JsonCreator
     constructor() : this(0L, "", "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), null, null)
 
     @JsonIgnore
@@ -98,6 +106,9 @@ data class Payment(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().apply {
+            findAndRegisterModules()
+            disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        }
     }
 }
