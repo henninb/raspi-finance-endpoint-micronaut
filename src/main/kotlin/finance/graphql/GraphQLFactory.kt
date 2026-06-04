@@ -133,7 +133,10 @@ class GraphQLFactory(
             )
             .build()
 
-        val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
+        val executableSchema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)
+        val schema = graphql.schema.GraphQLSchema.newSchema(executableSchema)
+            .additionalType(Scalars.GraphQLID)
+            .build()
         return GraphQL.newGraphQL(schema).build()
     }
 }
