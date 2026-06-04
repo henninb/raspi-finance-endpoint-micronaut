@@ -1,9 +1,11 @@
 package finance.services
 
 import finance.domain.*
+import finance.exceptions.DuplicateTransferException
 import finance.repositories.TransferRepository
 import io.micrometer.core.annotation.Timed
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
@@ -25,14 +27,8 @@ open class TransferService(
 
 
     @Timed
+    @Transactional
     override fun insertTransfer(transfer: Transfer): Transfer {
-        val transactionSource = Transaction()
-        val transactionDestination = Transaction()
-
-        // Validate transfer - simplified validation
-        val constraintViolations: Set<Any> = emptySet() // TODO: implement proper validation
-        handleConstraintViolations(constraintViolations, meterService)
-
         // Validate source account
         val optionalSourceAccount = accountService.account(transfer.sourceAccount)
         if (!optionalSourceAccount.isPresent) {
@@ -49,66 +45,73 @@ open class TransferService(
             throw RuntimeException("Destination account not found: ${transfer.destinationAccount}")
         }
 
-        // Populate source and destination transactions
-        populateSourceTransaction(transactionSource, transfer, transfer.sourceAccount)
-        populateDestinationTransaction(transactionDestination, transfer, transfer.destinationAccount)
+        val transactionSource = buildTransferTransaction(
+            transfer = transfer,
+            accountName = transfer.sourceAccount,
+            description = "transfer withdrawal",
+            notes = "Transfer to ${transfer.destinationAccount}",
+            amount = transfer.amount.negate(),
+            accountType = AccountType.Debit
+        )
+        val transactionDestination = buildTransferTransaction(
+            transfer = transfer,
+            accountName = transfer.destinationAccount,
+            description = "transfer deposit",
+            notes = "Transfer from ${transfer.sourceAccount}",
+            amount = transfer.amount,
+            accountType = AccountType.Credit
+        )
 
-        // Save transactions and transfer
-        transactionService.insertTransaction(transactionSource)
-        transactionService.insertTransaction(transactionDestination)
+        try {
+            transactionService.insertTransaction(transactionSource)
+            transactionService.insertTransaction(transactionDestination)
 
-        transfer.guidSource = transactionSource.guid
-        transfer.guidDestination = transactionDestination.guid
-        logger.info("Creating transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transfer.dateUpdated = timestamp
-        transfer.dateAdded = timestamp
+            transfer.guidSource = transactionSource.guid
+            transfer.guidDestination = transactionDestination.guid
+            logger.info("Creating transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
+            val timestamp = Timestamp(System.currentTimeMillis())
+            transfer.dateUpdated = timestamp
+            transfer.dateAdded = timestamp
 
-        val savedTransfer = transferRepository.saveAndFlush(transfer)
-        logger.info("Successfully created transfer with ID: ${savedTransfer.transferId}")
-        return savedTransfer
+            val savedTransfer = transferRepository.saveAndFlush(transfer)
+            logger.info("Successfully created transfer with ID: ${savedTransfer.transferId}")
+            return savedTransfer
+        } catch (e: Exception) {
+            val msg = e.message ?: ""
+            if (msg.contains("duplicate", ignoreCase = true) || msg.contains("unique", ignoreCase = true)) {
+                logger.error("Duplicate transfer detected: ${transfer.sourceAccount} -> ${transfer.destinationAccount} on ${transfer.transactionDate}")
+                meterService.incrementExceptionThrownCounter("DuplicateTransferException")
+                throw DuplicateTransferException("Transfer already exists for ${transfer.sourceAccount} -> ${transfer.destinationAccount} on ${transfer.transactionDate}")
+            }
+            throw e
+        }
     }
 
-    private fun populateSourceTransaction(
-        transaction: Transaction,
+    private fun buildTransferTransaction(
         transfer: Transfer,
-        accountName: String
-    ) {
-        transaction.guid = UUID.randomUUID().toString()
-        transaction.transactionDate = transfer.transactionDate
-        transaction.description = "transfer withdrawal"
-        transaction.category = "transfer"
-        transaction.notes = "Transfer to ${transfer.destinationAccount}"
-        transaction.amount = transfer.amount.negate()
-        transaction.transactionState = TransactionState.Outstanding
-        transaction.reoccurringType = ReoccurringType.Onetime
-        transaction.accountType = AccountType.Debit
-        transaction.accountNameOwner = accountName
-        transaction.owner = transfer.owner ?: ""
+        accountName: String,
+        description: String,
+        notes: String,
+        amount: BigDecimal,
+        accountType: AccountType
+    ): Transaction {
         val timestamp = Timestamp(System.currentTimeMillis())
-        transaction.dateUpdated = timestamp
-        transaction.dateAdded = timestamp
-    }
-
-    private fun populateDestinationTransaction(
-        transaction: Transaction,
-        transfer: Transfer,
-        accountName: String
-    ) {
-        transaction.guid = UUID.randomUUID().toString()
-        transaction.transactionDate = transfer.transactionDate
-        transaction.description = "transfer deposit"
-        transaction.category = "transfer"
-        transaction.notes = "Transfer from ${transfer.sourceAccount}"
-        transaction.amount = transfer.amount
-        transaction.transactionState = TransactionState.Outstanding
-        transaction.reoccurringType = ReoccurringType.Onetime
-        transaction.accountType = AccountType.Debit
-        transaction.accountNameOwner = accountName
-        transaction.owner = transfer.owner ?: ""
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transaction.dateUpdated = timestamp
-        transaction.dateAdded = timestamp
+        return Transaction().apply {
+            guid = UUID.randomUUID().toString()
+            transactionDate = transfer.transactionDate
+            this.description = description
+            category = "transfer"
+            this.notes = notes
+            this.amount = amount
+            transactionState = TransactionState.Outstanding
+            reoccurringType = ReoccurringType.Onetime
+            transactionType = "transfer"
+            this.accountType = accountType
+            accountNameOwner = accountName
+            owner = transfer.owner ?: ""
+            dateUpdated = timestamp
+            dateAdded = timestamp
+        }
     }
 
     @Timed

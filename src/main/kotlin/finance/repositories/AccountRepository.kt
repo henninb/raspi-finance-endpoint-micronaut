@@ -15,41 +15,30 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
 
     @Query(
-            value = "SELECT * FROM t_account WHERE account_type = 'credit' and active_status = true and totals > 0.0 order by account_name_owner",
-            nativeQuery = true
+        value = "SELECT * FROM t_account WHERE account_type = 'credit' AND active_status = true AND (outstanding > 0 OR future > 0 OR cleared > 0) ORDER BY account_name_owner",
+        nativeQuery = true
     )
     fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(
         activeStatus: Boolean = true,
         accountType: AccountType = AccountType.Credit,
-        totals: BigDecimal = BigDecimal(
-            0.0
-        )
+        totals: BigDecimal = BigDecimal(0.0)
     ): List<Account>
 
     @Transactional
     fun deleteByAccountNameOwner(accountNameOwner: String)
 
-    //@Modifying
     @Transactional
     @Query(
-        value = "UPDATE t_account SET totals = x.totals FROM (SELECT account_name_owner, SUM(amount) AS totals FROM t_transaction WHERE active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
+        value = "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
+            "(SELECT account_name_owner, " +
+            "SUM(CASE WHEN transaction_state = 'cleared' THEN amount ELSE 0 END) AS cleared, " +
+            "SUM(CASE WHEN transaction_state = 'outstanding' THEN amount ELSE 0 END) AS outstanding, " +
+            "SUM(CASE WHEN transaction_state = 'future' THEN amount ELSE 0 END) AS future " +
+            "FROM t_transaction WHERE active_status = true GROUP BY account_name_owner) AS x " +
+            "WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
-    //SpEL
-//    UPDATE Persons
-//    SET  Persons.PersonCityName=(SELECT AddressList.PostCode
-//    FROM AddressList
-//    WHERE AddressList.PersonId = Persons.PersonId)
-    //@Query(value = "UPDATE #{entityName} SET totals=(SELECT SUM(amount) AS totals FROM Transaction WHERE active_status = true and Account.account_name_owner = x.account_name_owner")
-    fun updateTheGrandTotalForAllTransactions()
-
-    //@Modifying
-    @Transactional
-    @Query(
-        value = "UPDATE t_account SET totals_balanced = x.totals_balanced FROM (SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction WHERE transaction_state = 'cleared' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
-        nativeQuery = true
-    )
-    fun updateTheGrandTotalForAllClearedTransactions()
+    fun updateTotalsForAllAccounts()
 
     @Query(
         value = "SELECT COALESCE((A.debits - B.credits), 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' AND active_status = true) B",

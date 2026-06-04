@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.Transfer
+import finance.exceptions.DuplicateTransferException
 import finance.services.TransferService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -27,8 +28,12 @@ class TransferController(private var transferService: TransferService) : BaseCon
         return try {
             val transferResponse = transferService.insertTransfer(transfer)
             HttpResponse.status<Transfer>(HttpStatus.CREATED).body(transferResponse)
+        } catch (ex: DuplicateTransferException) {
+            throw HttpStatusException(HttpStatus.CONFLICT, ex.message)
         } catch (ex: HttpStatusException) {
-            throw HttpStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transfer: ${ex.message}")
+            throw ex
+        } catch (ex: RuntimeException) {
+            throw HttpStatusException(HttpStatus.BAD_REQUEST, ex.message)
         } catch (ex: Exception) {
             throw HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}")
         }

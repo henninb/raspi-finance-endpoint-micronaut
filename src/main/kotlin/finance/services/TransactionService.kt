@@ -241,6 +241,7 @@ open class TransactionService(
 
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
+            processDescription(transaction)
             transaction.transactionId = transactionFromDatabase.transactionId
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)

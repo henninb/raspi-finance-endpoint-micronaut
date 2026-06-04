@@ -38,7 +38,6 @@ open class AccountService(
     // TODO: Implement these interface methods as needed
     override fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal = BigDecimal.ZERO
     override fun deleteAccount(accountNameOwner: String): Boolean = false
-    override fun updateTotalsForAllAccounts(): Boolean = false
     @Timed
     open fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
@@ -113,29 +112,21 @@ open class AccountService(
         return true
     }
 
-    // TODO: set the update timestamp logic
     @Timed
-    open fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
-        //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
-        //val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
-//        accounts.forEach { account ->
-//            //sum and update
-//        }
-
+    override fun updateTotalsForAllAccounts(): Boolean {
         try {
-            logger.info("updateAccountGrandTotals")
-            accountRepository.updateTheGrandTotalForAllClearedTransactions()
-            logger.info("updateAccountClearedTotals")
-            accountRepository.updateTheGrandTotalForAllTransactions()
-            logger.info("updateAccountTotals")
-
-            //TODO: fix the exception
-        } catch (invalidDataAccessResourceUsageException: Exception) {
-            meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
-            logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
+            logger.info("updateTotalsForAllAccounts")
+            accountRepository.updateTotalsForAllAccounts()
+        } catch (e: Exception) {
+            meterService.incrementExceptionCaughtCounter("UpdateTotalsException")
+            logger.warn("updateTotalsForAllAccounts failed: ${e.message}")
         }
         return true
     }
+
+    // Keep legacy name as a delegate so callers in TransactionService/AccountController still compile
+    @Timed
+    open fun updateTheGrandTotalForAllClearedTransactions(): Boolean = updateTotalsForAllAccounts()
 
     //TODO: Complete the method logic
     @Timed
