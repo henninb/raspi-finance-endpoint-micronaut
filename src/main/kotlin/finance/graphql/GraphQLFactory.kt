@@ -2,6 +2,7 @@ package finance.graphql
 
 import graphql.GraphQL
 import graphql.GraphQLContext
+import graphql.Scalars
 import graphql.execution.CoercedVariables
 import graphql.language.StringValue
 import graphql.language.Value
@@ -80,6 +81,7 @@ class GraphQLFactory(
             .scalar(ExtendedScalars.Date)
             .scalar(timestampDateTimeScalar)
             .scalar(ExtendedScalars.GraphQLLong)
+            .scalar(Scalars.GraphQLID)
             .type(TypeRuntimeWiring.newTypeWiring("Query")
                 .dataFetcher("accounts", queryFetchers.accounts())
                 .dataFetcher("account", queryFetchers.account())

@@ -101,7 +101,7 @@ class GraphQLMutationFetchers(
         transaction.accountNameOwner = input["accountNameOwner"] as String
         transaction.accountType = AccountType.valueOf((input["accountType"] as String).replaceFirstChar { it.uppercaseChar() })
         transaction.transactionType = input["transactionType"] as? String ?: "undefined"
-        transaction.transactionDate = LocalDate.parse(input["transactionDate"] as String)
+        transaction.transactionDate = input["transactionDate"] as LocalDate
         transaction.description = input["description"] as String
         transaction.category = input["category"] as String
         transaction.amount = BigDecimal(input["amount"].toString())
@@ -203,7 +203,7 @@ class GraphQLMutationFetchers(
             paymentId = 0,
             sourceAccount = input["sourceAccount"] as String,
             destinationAccount = input["destinationAccount"] as String,
-            transactionDate = LocalDate.parse(input["transactionDate"] as String),
+            transactionDate = input["transactionDate"] as LocalDate,
             amount = BigDecimal(input["amount"].toString()),
         )
         payment.activeStatus = input["activeStatus"] as? Boolean ?: true
@@ -240,7 +240,7 @@ class GraphQLMutationFetchers(
             transferId = 0,
             sourceAccount = input["sourceAccount"] as String,
             destinationAccount = input["destinationAccount"] as String,
-            transactionDate = LocalDate.parse(input["transactionDate"] as String),
+            transactionDate = input["transactionDate"] as LocalDate,
             amount = BigDecimal(input["amount"].toString()),
             guidSource = UUID.randomUUID().toString(),
             guidDestination = UUID.randomUUID().toString(),
@@ -355,7 +355,7 @@ class GraphQLMutationFetchers(
 
     private fun buildMedicalExpense(input: Map<String, Any>): MedicalExpense {
         val expense = MedicalExpense()
-        expense.serviceDate = LocalDate.parse(input["serviceDate"] as String)
+        expense.serviceDate = input["serviceDate"] as LocalDate
         expense.billedAmount = BigDecimal(input["billedAmount"].toString())
         expense.insuranceDiscount = BigDecimal(input["insuranceDiscount"].toString())
         expense.insurancePaid = BigDecimal(input["insurancePaid"].toString())
@@ -371,7 +371,7 @@ class GraphQLMutationFetchers(
         expense.transactionId = (input["transactionId"] as? Int)?.toLong()
         expense.providerId = (input["providerId"] as? Int)?.toLong()
         expense.familyMemberId = (input["familyMemberId"] as? Int)?.toLong()
-        (input["paidDate"] as? String)?.let { expense.paidDate = LocalDate.parse(it) }
+        (input["paidDate"] as? LocalDate)?.let { expense.paidDate = it }
         return expense
     }
 }
