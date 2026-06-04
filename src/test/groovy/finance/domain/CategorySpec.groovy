@@ -8,20 +8,21 @@ import finance.helpers.CategoryBuilder
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.Validation
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
 
 class CategorySpec extends Specification {
 
     protected ValidatorFactory validatorFactory
     protected Validator validator
     protected ObjectMapper mapper = new ObjectMapper()
-    protected String jsonPayload = '{"category":"bar", "activeStatus":true}'
+    protected String jsonPayload = '{"categoryName":"bar", "activeStatus":true}'
 
     void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
+        validatorFactory = Validation.byDefaultProvider().configure().messageInterpolator(new ParameterMessageInterpolator()).buildValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
@@ -30,12 +31,11 @@ class CategorySpec extends Specification {
     }
 
     void 'test -- JSON serialization to Category'() {
-
         when:
         Category category = mapper.readValue(jsonPayload, Category)
 
         then:
-        category.category == "bar"
+        category.categoryName == "bar"
         0 * _
     }
 
@@ -50,15 +50,14 @@ class CategorySpec extends Specification {
         0 * _
 
         where:
-        payload                   | exceptionThrown          | message
-        'non-jsonPayload'         | JsonParseException       | 'Unrecognized token'
-        '[]'                      | MismatchedInputException | 'Cannot deserialize value of type'
-        '{category: "test"}'      | JsonParseException       | 'was expecting double-quote to start field name'
-        '{"activeStatus": "abc"}' | InvalidFormatException   | 'Cannot deserialize value of type'
+        payload                    | exceptionThrown          | message
+        'non-jsonPayload'          | JsonParseException       | 'Unrecognized token'
+        '[]'                       | MismatchedInputException | 'Cannot deserialize value of type'
+        '{categoryName: "test"}'   | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"activeStatus": "abc"}'  | InvalidFormatException   | 'Cannot deserialize value of type'
     }
 
-    void 'test JSON deserialization to Category object - category is empty'() {
-
+    void 'test JSON deserialization to Category object - categoryName is empty'() {
         given:
         String jsonPayloadBad = '{"categoryMissing":"bar"}'
 
@@ -66,19 +65,30 @@ class CategorySpec extends Specification {
         Category category = mapper.readValue(jsonPayloadBad, Category)
 
         then:
-        category.category.empty
+        category.categoryName.empty
         0 * _
     }
 
     void 'test validation valid category'() {
         given:
         Category category = CategoryBuilder.builder().build()
-        category.category = "foobar"
+        category.categoryName = "foobar"
 
         when:
         Set<ConstraintViolation<Category>> violations = validator.validate(category)
 
         then:
         violations.empty
+    }
+
+    void 'test validation invalid category - empty categoryName'() {
+        given:
+        Category category = CategoryBuilder.builder().withCategory('').build()
+
+        when:
+        Set<ConstraintViolation<Category>> violations = validator.validate(category)
+
+        then:
+        violations.size() == 1
     }
 }

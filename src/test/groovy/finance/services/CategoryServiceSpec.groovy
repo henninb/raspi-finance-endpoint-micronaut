@@ -3,8 +3,8 @@ package finance.services
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
 
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class CategoryServiceSpec extends BaseServiceSpec {
@@ -48,10 +48,10 @@ class CategoryServiceSpec extends BaseServiceSpec {
         Category category = CategoryBuilder.builder().build()
 
         when:
-        categoryService.deleteByCategoryName(category.category)
+        categoryService.deleteByCategoryName(category.categoryName)
 
         then:
-        1 * categoryRepositoryMock.deleteByCategory(category.category)
+        1 * categoryRepositoryMock.deleteByCategoryName(category.categoryName)
         0 * _
     }
 }

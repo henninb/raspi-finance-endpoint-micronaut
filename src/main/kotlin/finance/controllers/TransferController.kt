@@ -20,8 +20,7 @@ class TransferController(private var transferService: TransferService) : BaseCon
         return HttpResponse.ok(transfers)
     }
 
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner": "test_brian", "transferAmount": 100.00, "description": "test transfer"}' https://localhost:8443/transfer/insert
-    @Post("/insert")
+    @Post
     @Consumes("application/json")
     @Produces("application/json")
     fun insertTransfer(@Body transfer: Transfer): HttpResponse<Transfer> {

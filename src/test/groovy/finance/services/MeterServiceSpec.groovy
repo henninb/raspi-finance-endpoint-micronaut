@@ -12,7 +12,7 @@ class MeterServiceSpec extends Specification {
     protected Counter counter = Mock(Counter)
 
     static Meter.Id setMeterId(String counterName, String accountNameOwner) {
-        Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'server')
+        Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'localhost')
         Tag accountNameOwnerTag = Tag.of(Constants.ACCOUNT_NAME_OWNER_TAG, accountNameOwner)
         Tags tags = Tags.of(accountNameOwnerTag, serverNameTag)
         return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)

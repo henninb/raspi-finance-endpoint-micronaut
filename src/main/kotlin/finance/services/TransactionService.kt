@@ -106,8 +106,10 @@ open class TransactionService(
     open fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
-            transaction.accountId = accountOptional.get().accountId
-            transaction.accountType = accountOptional.get().accountType
+            val account = accountOptional.get()
+            transaction.accountId = account.accountId
+            transaction.accountType = account.accountType
+            transaction.owner = account.owner ?: ""
             logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
         } else {
             val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
@@ -115,8 +117,10 @@ open class TransactionService(
             //TODO: add metric here
             logger.info("inserted account from transactionService ${transaction.accountNameOwner}")
             accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
-            transaction.accountId = accountOptional.get().accountId
-            transaction.accountType = accountOptional.get().accountType
+            val savedAccount = accountOptional.get()
+            transaction.accountId = savedAccount.accountId
+            transaction.accountType = savedAccount.accountType
+            transaction.owner = savedAccount.owner ?: ""
         }
     }
 

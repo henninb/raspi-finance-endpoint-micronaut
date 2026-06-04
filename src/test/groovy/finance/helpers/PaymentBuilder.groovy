@@ -2,13 +2,14 @@ package finance.helpers
 
 import finance.domain.Payment
 
-import java.sql.Date
+import java.time.LocalDate
 
 class PaymentBuilder {
 
-    String accountNameOwner = 'foo_brian'
-    BigDecimal amount = 0.00G
-    Date transactionDate = Date.valueOf('2020-12-11')
+    String sourceAccount = 'checking_brian'
+    String destinationAccount = 'foo_brian'
+    BigDecimal amount = 5.00G
+    LocalDate transactionDate = LocalDate.of(2020, 12, 11)
     String guidSource = UUID.randomUUID()
     String guidDestination = UUID.randomUUID()
     Boolean activeStatus = true
@@ -17,10 +18,10 @@ class PaymentBuilder {
         return new PaymentBuilder()
     }
 
-    //TODO: setting the guids below does not set them as they are set automatically
     Payment build() {
         Payment payment = new Payment().with {
-            accountNameOwner = this.accountNameOwner
+            sourceAccount = this.sourceAccount
+            destinationAccount = this.destinationAccount
             amount = this.amount
             transactionDate = this.transactionDate
             guidSource = this.guidSource
@@ -30,8 +31,13 @@ class PaymentBuilder {
         return payment
     }
 
-    PaymentBuilder withAccountNameOwner(String accountNameOwner) {
-        this.accountNameOwner = accountNameOwner
+    PaymentBuilder withSourceAccount(String sourceAccount) {
+        this.sourceAccount = sourceAccount
+        return this
+    }
+
+    PaymentBuilder withDestinationAccount(String destinationAccount) {
+        this.destinationAccount = destinationAccount
         return this
     }
 
@@ -40,7 +46,7 @@ class PaymentBuilder {
         return this
     }
 
-    PaymentBuilder withTransactionDate(Date transactionDate) {
+    PaymentBuilder withTransactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         return this
     }

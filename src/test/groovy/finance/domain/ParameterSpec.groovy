@@ -7,10 +7,11 @@ import finance.helpers.ParameterBuilder
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.Validation
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
 
 class ParameterSpec extends Specification {
 
@@ -19,7 +20,7 @@ class ParameterSpec extends Specification {
     protected ObjectMapper mapper = new ObjectMapper()
 
     void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
+        validatorFactory = Validation.byDefaultProvider().configure().messageInterpolator(new ParameterMessageInterpolator()).buildValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
 
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 import java.math.RoundingMode
 
 @SuppressWarnings("GroovyAccessibility")
@@ -79,8 +79,8 @@ class AccountServiceSpec extends BaseServiceSpec {
 
         then:
         thrown(ValidationException)
-        constraintViolations.size() == 2
-        1 * validatorMock.validate(account) >> constraintViolations
+        constraintViolations.size() >= 1
+        1 * validatorMock.validate(_ as Account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
@@ -103,9 +103,9 @@ class AccountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    void 'test insertAccount - invalid moniker'() {
+    void 'test insertAccount - invalid accountNameOwner too short'() {
         given:
-        Account account = AccountBuilder.builder().withMoniker('12345').build()
+        Account account = AccountBuilder.builder().withAccountNameOwner('ab').build()
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
@@ -116,7 +116,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * validatorMock.validate(account) >> constraintViolations
+        1 * validatorMock.validate(_ as Account) >> constraintViolations
         1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
         0 * _

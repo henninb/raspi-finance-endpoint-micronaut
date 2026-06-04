@@ -23,7 +23,7 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
     override fun convertToEntityAttribute(attribute: String): ReoccurringType {
         return when (attribute.trim().lowercase(Locale.getDefault())) {
             "annually" -> ReoccurringType.Annually
-            "bi-annually" -> ReoccurringType.BiAnnually
+            "bi-annually", "biannually", "bi_annually" -> ReoccurringType.BiAnnually
             "fortnightly" -> ReoccurringType.FortNightly
             "quarterly" -> ReoccurringType.Quarterly
             "monthly" -> ReoccurringType.Monthly

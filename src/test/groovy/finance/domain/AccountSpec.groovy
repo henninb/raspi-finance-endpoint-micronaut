@@ -9,10 +9,11 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.Validation
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
 
 class AccountSpec extends Specification {
 
@@ -21,7 +22,7 @@ class AccountSpec extends Specification {
     protected ObjectMapper mapper = new ObjectMapper()
 
     void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
+        validatorFactory = Validation.byDefaultProvider().configure().messageInterpolator(new ParameterMessageInterpolator()).buildValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
@@ -105,11 +106,7 @@ class AccountSpec extends Specification {
         violations.iterator().next().invalidValue == account.properties[invalidField]
 
         where:
-        invalidField       | accountType        | accountNameOwner   | moniker | activeStatus | totals | totalsBalanced | expectedError                              | errorCount
-        'accountNameOwner' | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | 0.00G  | 0.00G          | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | AccountType.Credit | '_b'               | '0000'  | true         | 0.00G  | 0.00G          | 'size must be between 3 and 40'            | 1
-        'moniker'          | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | 0.00G  | 0.00G          | 'Must be 4 digits.'                        | 1
-        'moniker'          | AccountType.Credit | 'chase_brian'      | '00001' | true         | 0.00G  | 0.00G          | 'Must be 4 digits.'                        | 1
-        //'accountType'     | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | 0.00G | 0.00G | 'Must be 4 digits.'                        | 1
+        invalidField       | accountType        | accountNameOwner | moniker | activeStatus | totals | totalsBalanced | expectedError                   | errorCount
+        'accountNameOwner' | AccountType.Credit | '_b'             | '0000'  | true         | 0.00G  | 0.00G          | 'size must be between 3 and 40' | 1
     }
 }

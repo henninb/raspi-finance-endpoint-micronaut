@@ -84,6 +84,7 @@ open class TransferService(
         transaction.reoccurringType = ReoccurringType.Onetime
         transaction.accountType = AccountType.Debit
         transaction.accountNameOwner = accountName
+        transaction.owner = transfer.owner ?: ""
         val timestamp = Timestamp(System.currentTimeMillis())
         transaction.dateUpdated = timestamp
         transaction.dateAdded = timestamp
@@ -104,6 +105,7 @@ open class TransferService(
         transaction.reoccurringType = ReoccurringType.Onetime
         transaction.accountType = AccountType.Debit
         transaction.accountNameOwner = accountName
+        transaction.owner = transfer.owner ?: ""
         val timestamp = Timestamp(System.currentTimeMillis())
         transaction.dateUpdated = timestamp
         transaction.dateAdded = timestamp
@@ -123,7 +125,7 @@ open class TransferService(
     }
 
     @Timed
-    open fun updateTransfer(transferId: Long, transfer: Transfer): Optional<Transfer> {
+    override fun updateTransfer(transferId: Long, transfer: Transfer): Optional<Transfer> {
         val existing = transferRepository.findByTransferId(transferId)
         if (existing.isPresent) {
             val toUpdate = existing.get()

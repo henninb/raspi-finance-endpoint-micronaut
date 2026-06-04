@@ -21,6 +21,7 @@ interface ITransferService {
 //        transferAccountNameOwner: String
 //    )
 
+    fun updateTransfer(transferId: Long, transfer: Transfer): Optional<Transfer>
     fun deleteByTransferId(transferId: Long): Boolean
     fun findByTransferId(transferId: Long): Optional<Transfer>
 }

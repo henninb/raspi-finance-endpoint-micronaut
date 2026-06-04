@@ -258,7 +258,7 @@ class GraphQLMutationFetchers(
         existing.destinationAccount = input["destinationAccount"] as? String ?: existing.destinationAccount
         existing.amount = input["amount"]?.let { BigDecimal(it.toString()) } ?: existing.amount
         existing.activeStatus = input["activeStatus"] as? Boolean ?: existing.activeStatus
-        existing
+        transferService.updateTransfer(id, existing).orElseThrow { IllegalArgumentException("Transfer not found after update: $id") }
     }
 
     fun deleteTransfer() = DataFetcher { env ->

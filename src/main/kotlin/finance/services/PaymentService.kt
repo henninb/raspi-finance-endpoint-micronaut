@@ -86,6 +86,7 @@ open class PaymentService(
         transactionDebit.accountType = AccountType.Debit
         transactionDebit.reoccurringType = ReoccurringType.Onetime
         transactionDebit.accountNameOwner = payment.sourceAccount
+        transactionDebit.owner = payment.owner
         transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
@@ -102,6 +103,7 @@ open class PaymentService(
         transactionCredit.accountType = AccountType.Credit
         transactionCredit.reoccurringType = ReoccurringType.Onetime
         transactionCredit.accountNameOwner = payment.destinationAccount
+        transactionCredit.owner = payment.owner
         transactionCredit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionCredit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
