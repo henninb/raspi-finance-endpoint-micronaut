@@ -4,9 +4,9 @@ import io.micronaut.http.HttpRequest
 import jakarta.inject.Singleton
 
 @Singleton
-class OwnerExtractorService(private val jwtTokenService: JwtTokenService) {
+open class OwnerExtractorService(private val jwtTokenService: JwtTokenService) {
 
-    fun extractOwner(request: HttpRequest<*>): String? {
+    open fun extractOwner(request: HttpRequest<*>): String? {
         val token = jwtTokenService.extractToken(request) ?: return null
         return try {
             jwtTokenService.parseClaims(token)[JwtTokenService.CLAIM_USERNAME] as? String

@@ -9,11 +9,11 @@ import java.util.*
 
 
 @Singleton
-class UserService(
+open class UserService(
     private val userRepository: UserRepository
 ) : BaseService() {
 
-    fun signIn(user: User): Optional<User> {
+    open fun signIn(user: User): Optional<User> {
         val userOptional = userRepository.findByUsername(user.username)
         if (userOptional.isPresent) {
             val dbUser = userOptional.get()
@@ -24,7 +24,7 @@ class UserService(
         return Optional.empty()
     }
 
-    fun signUp(user: User): User {
+    open fun signUp(user: User): User {
         if (userRepository.findByUsername(user.username).isPresent) {
             throw IllegalArgumentException("Username already exists")
         }
@@ -35,7 +35,7 @@ class UserService(
 //    fun findUserByUsername(username: String): User? =
 //        userRepository.findByUsername(username).orElse(null)
 
-    fun findUserByUsername(username: String): User? =
+    open fun findUserByUsername(username: String): User? =
         userRepository.findByUsername(username)
             .orElse(null)
             ?.apply { password = "" }

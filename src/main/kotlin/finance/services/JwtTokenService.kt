@@ -13,7 +13,7 @@ import java.util.UUID
 import javax.crypto.SecretKey
 
 @Singleton
-class JwtTokenService(
+open class JwtTokenService(
     @Value("\${custom.project.jwt.key:default-secret-key-must-be-at-least-32-bytes}") jwtKey: String,
 ) {
     companion object {
@@ -38,7 +38,7 @@ class JwtTokenService(
         Keys.hmacShaKeyFor(keyBytes)
     }
 
-    fun extractToken(request: HttpRequest<*>): String? {
+    open fun extractToken(request: HttpRequest<*>): String? {
         val fromCookie = request.cookies.findCookie("token").map { it.value }.orElse(null)
         if (!fromCookie.isNullOrBlank()) return fromCookie
         val authHeader = request.headers.get("Authorization")
@@ -48,7 +48,7 @@ class JwtTokenService(
         return null
     }
 
-    fun parseClaims(token: String): Claims =
+    open fun parseClaims(token: String): Claims =
         Jwts.parser()
             .requireIssuer(ISSUER)
             .requireAudience(AUDIENCE)
@@ -57,7 +57,7 @@ class JwtTokenService(
             .parseSignedClaims(token)
             .payload
 
-    fun buildToken(username: String, keepLoggedIn: Boolean = false): String {
+    open fun buildToken(username: String, keepLoggedIn: Boolean = false): String {
         val expiryMs = if (keepLoggedIn) JWT_LONG_EXPIRY_MS else JWT_EXPIRY_MS
         val now = Date()
         return Jwts.builder()
@@ -77,7 +77,7 @@ class JwtTokenService(
     fun expirySecondsFor(keepLoggedIn: Boolean): Long =
         if (keepLoggedIn) JWT_LONG_EXPIRY_SECONDS else JWT_EXPIRY_SECONDS
 
-    fun buildTokenCookie(token: String, keepLoggedIn: Boolean): Cookie =
+    open fun buildTokenCookie(token: String, keepLoggedIn: Boolean): Cookie =
         Cookie.of("token", token)
             .domain(".bhenning.com")
             .path("/")
@@ -86,7 +86,7 @@ class JwtTokenService(
             .secure(true)
             .sameSite(io.micronaut.http.cookie.SameSite.None)
 
-    fun buildClearCookie(): Cookie =
+    open fun buildClearCookie(): Cookie =
         Cookie.of("token", "")
             .domain(".bhenning.com")
             .path("/")
