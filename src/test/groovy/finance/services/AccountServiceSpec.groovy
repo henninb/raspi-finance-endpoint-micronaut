@@ -2,10 +2,12 @@ package finance.services
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
+import finance.domain.AccountType
 import finance.helpers.AccountBuilder
 
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 @SuppressWarnings("GroovyAccessibility")
@@ -168,6 +170,194 @@ class AccountServiceSpec extends BaseServiceSpec {
         then:
         result != desiredResult
         1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> desiredResult
+        0 * _
+    }
+
+    void 'test deleteByAccountNameOwner - returns true'() {
+        given:
+        String accountNameOwner = 'foo_brian'
+
+        when:
+        Boolean result = accountService.deleteByAccountNameOwner(accountNameOwner)
+
+        then:
+        result
+        1 * accountRepositoryMock.deleteByAccountNameOwner(accountNameOwner)
+        0 * _
+    }
+
+    void 'test updateAccount - account found and saved'() {
+        given:
+        Account account = AccountBuilder.builder().build()
+
+        when:
+        Boolean result = accountService.updateAccount(account)
+
+        then:
+        result
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(account)
+        0 * _
+    }
+
+    void 'test updateAccount - account not found returns false'() {
+        given:
+        Account account = AccountBuilder.builder().build()
+
+        when:
+        Boolean result = accountService.updateAccount(account)
+
+        then:
+        !result
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
+        0 * _
+    }
+
+    void 'test renameAccountNameOwner - success'() {
+        given:
+        Account oldAccount = AccountBuilder.builder().withAccountNameOwner('old_brian').build()
+        Account newAccount = AccountBuilder.builder().withAccountNameOwner('new_brian').build()
+
+        when:
+        Boolean result = accountService.renameAccountNameOwner('old_brian', 'new_brian')
+
+        then:
+        result
+        1 * accountRepositoryMock.findByAccountNameOwner('new_brian') >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner('old_brian') >> Optional.of(oldAccount)
+        1 * accountRepositoryMock.saveAndFlush(_ as Account) >> newAccount
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc('old_brian', true) >> []
+        1 * accountRepositoryMock.deleteByAccountNameOwner('old_brian')
+        0 * _
+    }
+
+    void 'test renameAccountNameOwner - old account not found throws RuntimeException'() {
+        when:
+        accountService.renameAccountNameOwner('nonexistent_brian', 'new_brian')
+
+        then:
+        thrown(RuntimeException)
+        1 * accountRepositoryMock.findByAccountNameOwner('new_brian') >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner('nonexistent_brian') >> Optional.empty()
+        0 * _
+    }
+
+    void 'test renameAccountNameOwner - new account already exists throws RuntimeException'() {
+        given:
+        Account existing = AccountBuilder.builder().withAccountNameOwner('existing_brian').build()
+        Account old = AccountBuilder.builder().withAccountNameOwner('old_brian').build()
+
+        when:
+        accountService.renameAccountNameOwner('old_brian', 'existing_brian')
+
+        then:
+        thrown(RuntimeException)
+        1 * accountRepositoryMock.findByAccountNameOwner('existing_brian') >> Optional.of(existing)
+        1 * accountRepositoryMock.findByAccountNameOwner('old_brian') >> Optional.of(old)
+        0 * _
+    }
+
+    void 'test deactivateAccount - success'() {
+        given:
+        Account account = AccountBuilder.builder().withActiveStatus(true).build()
+
+        when:
+        Account result = accountService.deactivateAccount(account.accountNameOwner)
+
+        then:
+        !result.activeStatus
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(account) >> account
+        0 * _
+    }
+
+    void 'test deactivateAccount - not found throws RuntimeException'() {
+        when:
+        accountService.deactivateAccount('nonexistent_brian')
+
+        then:
+        thrown(RuntimeException)
+        1 * accountRepositoryMock.findByAccountNameOwner('nonexistent_brian') >> Optional.empty()
+        0 * _
+    }
+
+    void 'test activateAccount - success'() {
+        given:
+        Account account = AccountBuilder.builder().withActiveStatus(false).build()
+
+        when:
+        Account result = accountService.activateAccount(account.accountNameOwner)
+
+        then:
+        result.activeStatus
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(account) >> account
+        0 * _
+    }
+
+    void 'test activateAccount - not found throws RuntimeException'() {
+        when:
+        accountService.activateAccount('nonexistent_brian')
+
+        then:
+        thrown(RuntimeException)
+        1 * accountRepositoryMock.findByAccountNameOwner('nonexistent_brian') >> Optional.empty()
+        0 * _
+    }
+
+    void 'test updateTotalsForAllAccounts - success returns true'() {
+        when:
+        Boolean result = accountService.updateTotalsForAllAccounts()
+
+        then:
+        result
+        1 * accountRepositoryMock.updateTotalsForAllAccounts()
+        0 * _
+    }
+
+    void 'test findAccountsThatRequirePayment - returns list of accounts needing payment'() {
+        when:
+        List<String> results = accountService.findAccountsThatRequirePayment()
+
+        then:
+        results != null
+        1 * accountRepositoryMock.findAccountsThatRequirePayment() >> []
+        0 * _
+    }
+
+    void 'test findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner - returns accounts'() {
+        given:
+        Account account = AccountBuilder.builder().build()
+
+        when:
+        List<Account> results = accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+
+        then:
+        results.size() == 1
+        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, new BigDecimal(0.0)) >> [account]
+        0 * _
+    }
+
+    void 'test findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner - empty list'() {
+        when:
+        List<Account> results = accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+
+        then:
+        results.isEmpty()
+        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, new BigDecimal(0.0)) >> []
+        0 * _
+    }
+
+    void 'test account - delegates to findByAccountNameOwner'() {
+        given:
+        Account account = AccountBuilder.builder().build()
+
+        when:
+        Optional<Account> result = accountService.account(account.accountNameOwner)
+
+        then:
+        result.isPresent()
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         0 * _
     }
 }

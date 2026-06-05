@@ -13,6 +13,8 @@ import finance.utils.Constants
 import org.hibernate.NonUniqueResultException
 
 import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import java.math.BigDecimal
 import java.time.LocalDate
 
 @SuppressWarnings("GroovyAccessibility")
@@ -297,6 +299,382 @@ class TransactionServiceSpec extends BaseServiceSpec {
         thrown(RuntimeException)
         1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
         1 * counter.increment()
+        0 * _
+    }
+
+    void 'test updateTransaction - valid update succeeds'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+        Category cat = new Category()
+        cat.categoryName = transaction.category
+        Description desc = new Description()
+        desc.descriptionName = transaction.description
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+
+        when:
+        Boolean result = transactionService.updateTransaction(transaction)
+
+        then:
+        result
+        1 * validatorMock.validate(_ as Transaction) >> constraintViolations
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(_, transaction.category) >> Optional.of(cat)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(_, transaction.description) >> Optional.of(desc)
+        1 * transactionRepositoryMock.update(_ as Transaction)
+        0 * _
+    }
+
+    void 'test updateTransaction - guid not found returns false'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+        Category cat = new Category()
+        cat.categoryName = transaction.category
+        Description desc = new Description()
+        desc.descriptionName = transaction.description
+
+        when:
+        Boolean result = transactionService.updateTransaction(transaction)
+
+        then:
+        !result
+        1 * validatorMock.validate(_ as Transaction) >> constraintViolations
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        0 * _
+    }
+
+    void 'test updateTransaction - validation failure throws ValidationException'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(
+                TransactionBuilder.builder().withGuid('invalid').build())
+
+        when:
+        transactionService.updateTransaction(transaction)
+
+        then:
+        thrown(ValidationException)
+        1 * validatorMock.validate(_ as Transaction) >> constraintViolations
+        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test fetchTotalsByAccountNameOwner - calculates cleared and totals'() {
+        given:
+        String accountNameOwner = 'chase_brian'
+        Transaction cleared = TransactionBuilder.builder()
+                .withAmount(new BigDecimal('10.00'))
+                .withTransactionState(TransactionState.Cleared)
+                .build()
+        Transaction outstanding = TransactionBuilder.builder()
+                .withAmount(new BigDecimal('5.00'))
+                .withTransactionState(TransactionState.Outstanding)
+                .build()
+
+        when:
+        Map<String, BigDecimal> result = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
+
+        then:
+        result['totals'] == new BigDecimal('15.00')
+        result['totalsCleared'] == new BigDecimal('10.00')
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> [cleared, outstanding]
+        0 * _
+    }
+
+    void 'test fetchTotalsByAccountNameOwner - empty account returns zeros'() {
+        given:
+        String accountNameOwner = 'empty_brian'
+
+        when:
+        Map<String, BigDecimal> result = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
+
+        then:
+        result['totals'] == new BigDecimal('0.00')
+        result['totalsCleared'] == new BigDecimal('0.00')
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> []
+        0 * _
+    }
+
+    void 'test findByAccountNameOwnerOrderByTransactionDate - returns sorted transactions'() {
+        given:
+        String accountNameOwner = 'chase_brian'
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        List<Transaction> results = transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
+
+        then:
+        results.size() == 1
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> [transaction]
+        0 * _
+    }
+
+    void 'test findByAccountNameOwnerOrderByTransactionDate - empty list logs warning and increments meter'() {
+        given:
+        String accountNameOwner = 'nonexistent_brian'
+
+        when:
+        List<Transaction> results = transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
+
+        then:
+        results.isEmpty()
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> []
+        1 * meterRegistryMock.counter(setMeterId(finance.utils.Constants.TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER, 'non-existent-accounts')) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test findAllActiveTransactions - returns sorted list'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        List<Transaction> results = transactionService.findAllActiveTransactions()
+
+        then:
+        results.size() == 1
+        1 * transactionRepositoryMock.findByActiveStatusOrderByTransactionDateDesc(true) >> [transaction]
+        0 * _
+    }
+
+    void 'test findTransactionsByCategory - returns transactions'() {
+        given:
+        String categoryName = 'online'
+        Transaction transaction = TransactionBuilder.builder().withCategory(categoryName).build()
+
+        when:
+        List<Transaction> results = transactionService.findTransactionsByCategory(categoryName)
+
+        then:
+        results.size() == 1
+        1 * transactionRepositoryMock.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName, true) >> [transaction]
+        0 * _
+    }
+
+    void 'test findTransactionsByDescription - returns transactions'() {
+        given:
+        String descriptionName = 'aliexpress.com'
+        Transaction transaction = TransactionBuilder.builder().withDescription(descriptionName).build()
+
+        when:
+        List<Transaction> results = transactionService.findTransactionsByDescription(descriptionName)
+
+        then:
+        results.size() == 1
+        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName, true) >> [transaction]
+        0 * _
+    }
+
+    void 'test findTransactionsByDateRange - returns transactions within range'() {
+        given:
+        LocalDate startDate = LocalDate.of(2020, 1, 1)
+        LocalDate endDate = LocalDate.of(2020, 12, 31)
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        List<Transaction> results = transactionService.findTransactionsByDateRange(startDate, endDate)
+
+        then:
+        results.size() == 1
+        1 * transactionRepositoryMock.findByTransactionDateBetweenAndActiveStatusOrderByTransactionDateDesc(startDate, endDate, true) >> [transaction]
+        0 * _
+    }
+
+    void 'test updateTransactionState - future dated transaction throws RuntimeException'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder()
+                .withGuid(guid)
+                .withTransactionDate(LocalDate.now().plusDays(5))
+                .build()
+
+        when:
+        transactionService.updateTransactionState(guid, TransactionState.Cleared)
+
+        then:
+        thrown(RuntimeException)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test updateTransactionState - guid not found throws RuntimeException'() {
+        given:
+        String guid = UUID.randomUUID()
+
+        when:
+        transactionService.updateTransactionState(guid, TransactionState.Cleared)
+
+        then:
+        thrown(RuntimeException)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test updateTransactionReoccurringFlag - guid not found throws RuntimeException'() {
+        given:
+        String guid = UUID.randomUUID()
+
+        when:
+        transactionService.updateTransactionReoccurringFlag(guid, true)
+
+        then:
+        thrown(RuntimeException)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test changeAccountNameOwner - success'() {
+        given:
+        String guid = UUID.randomUUID()
+        String accountNameOwner = 'chase_brian'
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+        Account account = new Account()
+        account.accountNameOwner = accountNameOwner
+        account.accountId = 1L
+
+        when:
+        Boolean result = transactionService.changeAccountNameOwner([accountNameOwner: accountNameOwner, guid: guid])
+
+        then:
+        result
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
+        0 * _
+    }
+
+    void 'test changeAccountNameOwner - null guid throws RuntimeException'() {
+        when:
+        transactionService.changeAccountNameOwner([accountNameOwner: 'chase_brian', guid: null])
+
+        then:
+        thrown(RuntimeException)
+        1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test changeAccountNameOwner - transaction not found throws RuntimeException'() {
+        given:
+        String guid = UUID.randomUUID()
+        String accountNameOwner = 'chase_brian'
+        Account account = new Account()
+        account.accountNameOwner = accountNameOwner
+
+        when:
+        transactionService.changeAccountNameOwner([accountNameOwner: accountNameOwner, guid: guid])
+
+        then:
+        thrown(RuntimeException)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        0 * _
+    }
+
+    void 'test insertTransaction - validation failure throws ValidationException'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(
+                TransactionBuilder.builder().withGuid('invalid').build())
+
+        when:
+        transactionService.insertTransaction(transaction)
+
+        then:
+        thrown(ValidationException)
+        1 * validatorMock.validate(_ as Transaction) >> constraintViolations
+        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'test createFutureTransaction - FortNightly adds 14 days'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder()
+                .withTransactionDate(LocalDate.of(2020, 6, 1))
+                .withReoccurringType(ReoccurringType.FortNightly)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(transaction)
+
+        then:
+        result.transactionDate == LocalDate.of(2020, 6, 15)
+        result.transactionState == TransactionState.Future
+        result.notes == ''
+        0 * _
+    }
+
+    void 'test masterTransactionUpdater - cleared reoccurring creates future transaction'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction dbTransaction = TransactionBuilder.builder()
+                .withGuid(guid)
+                .withTransactionDate(LocalDate.of(2020, 1, 15))
+                .withTransactionState(TransactionState.Cleared)
+                .withReoccurringType(ReoccurringType.Monthly)
+                .build()
+        Transaction incomingTransaction = TransactionBuilder.builder()
+                .withGuid(guid)
+                .withTransactionDate(LocalDate.of(2020, 1, 15))
+                .withTransactionState(TransactionState.Cleared)
+                .withReoccurringType(ReoccurringType.Monthly)
+                .build()
+        Category cat = new Category()
+        cat.categoryName = incomingTransaction.category
+        Description desc = new Description()
+        desc.descriptionName = incomingTransaction.description
+
+        when:
+        Boolean result = transactionService.masterTransactionUpdater(dbTransaction, incomingTransaction)
+
+        then:
+        result
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(_, incomingTransaction.category) >> Optional.of(cat)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(_, incomingTransaction.description) >> Optional.of(desc)
+        1 * transactionRepositoryMock.update(_ as Transaction)
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction future ->
+            assert future.transactionState == TransactionState.Future
+            future
+        }) >> incomingTransaction
+        0 * _
+    }
+
+    void 'test deleteReceiptImageForTransactionByGuid - transaction not found throws RuntimeException'() {
+        given:
+        String guid = UUID.randomUUID()
+
+        when:
+        transactionService.deleteReceiptImageForTransactionByGuid(guid)
+
+        then:
+        thrown(RuntimeException)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        0 * _
+    }
+
+    void 'test deleteReceiptImageForTransactionByGuid - no receipt image returns false'() {
+        given:
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
+
+        when:
+        Boolean result = transactionService.deleteReceiptImageForTransactionByGuid(guid)
+
+        then:
+        !result
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
         0 * _
     }
 }
