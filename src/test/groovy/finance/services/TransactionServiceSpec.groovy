@@ -115,6 +115,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Optional<Transaction> transactionOptional = Optional.of(transaction)
         Category cat = new Category()
         cat.categoryName = transaction.category
+        Description desc = new Description()
+        desc.descriptionName = transaction.description
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
@@ -126,6 +128,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(_ as Transaction) >> constraintViolations
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         1 * categoryRepositoryMock.findByOwnerAndCategoryName(_, transaction.category) >> Optional.of(cat)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(_, transaction.description) >> Optional.of(desc)
         1 * transactionRepositoryMock.update({ Transaction entity ->
             assert entity.category == transaction.category
             assert entity.accountNameOwner == transaction.accountNameOwner
