@@ -29,6 +29,10 @@ configurations {
     developmentOnly
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 
 dependencies {
     annotationProcessor("io.micronaut.data:micronaut-data-processor")
@@ -58,9 +62,9 @@ dependencies {
     implementation("jakarta.validation:jakarta.validation-api:3.1.1")
     implementation("org.hibernate.validator:hibernate-validator:9.1.0.Final")
     implementation("jakarta.transaction:jakarta.transaction-api:2.0.1")
-    implementation("io.jsonwebtoken:jjwt-api:0.12.7")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.7")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.7")
+    implementation("io.jsonwebtoken:jjwt-api:0.13.0")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.micronaut:micronaut-management")
     implementation("io.micronaut.micrometer:micronaut-micrometer-core")
@@ -81,7 +85,7 @@ dependencies {
     }
     testImplementation("io.micronaut.test:micronaut-test-spock")
     testImplementation("org.objenesis:objenesis:3.4")
-    testImplementation("net.bytebuddy:byte-buddy:1.15.11")
+    testImplementation("net.bytebuddy:byte-buddy:1.17.6")
 }
 
 application {
