@@ -109,9 +109,32 @@ open class PaymentService(
     }
 
     @Timed
+    @jakarta.transaction.Transactional
     open fun deleteByPaymentId(paymentId: Long) {
         logger.info("service - deleteByPaymentId = $paymentId")
+        val paymentOptional = paymentRepository.findByPaymentId(paymentId)
+        if (!paymentOptional.isPresent) {
+            logger.warn("Payment not found with ID: $paymentId")
+            return
+        }
+        val payment = paymentOptional.get()
+        val guidSource = payment.guidSource
+        val guidDestination = payment.guidDestination
+
+        // Delete the payment first to release FK references to t_transaction
         paymentRepository.deleteByPaymentId(paymentId)
+        logger.info("Payment deleted to allow cascade transaction deletes: $paymentId")
+
+        // Delete the linked transactions (returns false if not found — handled gracefully)
+        if (!guidSource.isNullOrBlank()) {
+            transactionService.deleteTransactionByGuid(guidSource)
+            logger.info("Deleted source transaction: $guidSource")
+        }
+        if (!guidDestination.isNullOrBlank()) {
+            transactionService.deleteTransactionByGuid(guidDestination)
+            logger.info("Deleted destination transaction: $guidDestination")
+        }
+        logger.info("Successfully deleted payment $paymentId and linked transactions")
     }
 
     @Timed
