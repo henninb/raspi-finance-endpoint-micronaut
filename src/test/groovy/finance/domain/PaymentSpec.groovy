@@ -111,9 +111,12 @@ class PaymentSpec extends Specification {
         violations.size() == errorCount
 
         where:
-        invalidField        | sourceAccount    | destinationAccount | transactionDate            | amount | guidDestination              | guidSource                   | errorCount
-        'sourceAccount'     | 'a_'             | 'foo_brian'        | LocalDate.of(2020, 10, 15) | 5.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 1
-        'guidDestination'   | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 16) | 5.0    | 'invalid'                    | UUID.randomUUID().toString() | 1
-        'guidSource'        | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 17) | 5.0    | UUID.randomUUID().toString() | 'invalid'                    | 1
+        invalidField        | sourceAccount    | destinationAccount | transactionDate            | amount      | guidDestination              | guidSource                   | errorCount
+        'sourceAccount'     | 'a_'             | 'foo_brian'        | LocalDate.of(2020, 10, 15) | 5.0         | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 1
+        'guidDestination'   | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 16) | 5.0         | 'invalid'                    | UUID.randomUUID().toString() | 1
+        'guidSource'        | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 17) | 5.0         | UUID.randomUUID().toString() | 'invalid'                    | 1
+        'amount'            | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 18) | 0.00        | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 1
+        'amount'            | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 19) | -1.00       | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 1
+        'amount'            | 'checking_brian' | 'foo_brian'        | LocalDate.of(2020, 10, 20) | 1000000.00  | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 1
     }
 }

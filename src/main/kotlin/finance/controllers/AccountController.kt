@@ -106,6 +106,12 @@ class AccountController(
         catch (e: RuntimeException) { HttpResponse.notFound() }
     }
 
+    @Put(value = "/totals/sync", produces = ["application/json"])
+    fun syncTotals(): HttpResponse<Void> {
+        accountService.syncTotals()
+        return HttpResponse.noContent()
+    }
+
     companion object {
         private val mapper = ObjectMapper().apply {
             findAndRegisterModules()

@@ -291,6 +291,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         then:
         result.activeStatus
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.reactivateAllTransactionsByAccountNameOwner(account.accountNameOwner) >> 0
         1 * accountRepositoryMock.saveAndFlush(account) >> account
         0 * _
     }

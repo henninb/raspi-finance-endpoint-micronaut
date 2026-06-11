@@ -109,12 +109,17 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
     void 'test deleteByPaymentId'() {
         given:
+        Payment payment = PaymentBuilder.builder().build()
+        payment.paymentId = 1L
+        payment.guidSource = null
+        payment.guidDestination = null
         Long paymentId = 1L
 
         when:
         paymentService.deleteByPaymentId(paymentId)
 
         then:
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
         1 * paymentRepositoryMock.deleteByPaymentId(paymentId)
         0 * _
     }

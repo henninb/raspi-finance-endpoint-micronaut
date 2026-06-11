@@ -240,7 +240,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    void 'create Future Transaction with jan 1 of leap year'() {
+    void 'create Future Transaction monthly adds one month'() {
         given:
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(LocalDate.of(2020, 1, 1))
@@ -251,11 +251,11 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
 
         then:
-        result.transactionDate == LocalDate.of(2021, 1, 1)
+        result.transactionDate == LocalDate.of(2020, 2, 1)
         0 * _
     }
 
-    void 'create Future Transaction with Feb 29'() {
+    void 'create Future Transaction monthly on leap day'() {
         given:
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(LocalDate.of(2020, 2, 29))
@@ -266,15 +266,15 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
 
         then:
-        result.transactionDate == LocalDate.of(2021, 2, 28)
+        result.transactionDate == LocalDate.of(2020, 3, 29)
         0 * _
     }
 
-    void 'create Future Transaction with leap year in play'() {
+    void 'create Future Transaction annually adds one year'() {
         given:
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(LocalDate.of(2019, 3, 1))
-                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurringType(ReoccurringType.Annually)
                 .build()
 
         when:

@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
+import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.LowerCaseConverter
 import jakarta.persistence.*
 import java.sql.Timestamp
 import java.util.*
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Entity
@@ -24,6 +27,7 @@ data class Parameter(
     var parameterId: Long,
 
     @field:Size(min = 1, max = 50)
+    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", unique = true, nullable = false)
     @JsonProperty

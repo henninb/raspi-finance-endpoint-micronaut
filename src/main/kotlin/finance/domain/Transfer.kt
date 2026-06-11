@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.util.Calendar
 import jakarta.persistence.*
 import jakarta.persistence.GenerationType
+import jakarta.persistence.Version
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
@@ -69,6 +70,10 @@ data class Transfer(
 
     @JsonIgnore
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @Version
+    @JsonProperty
+    var version: Long = 0L
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)

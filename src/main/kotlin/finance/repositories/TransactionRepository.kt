@@ -95,4 +95,13 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         nativeQuery = true,
     )
     fun bulkUpdateDescription(oldDescription: String, newDescription: String): Int
+
+    fun countByAccountNameOwner(accountNameOwner: String): Long
+
+    @Transactional
+    @Query(
+        value = "UPDATE t_transaction SET active_status = true, date_updated = now() WHERE account_name_owner = :accountNameOwner",
+        nativeQuery = true,
+    )
+    fun reactivateAllTransactionsByAccountNameOwner(accountNameOwner: String): Int
 }

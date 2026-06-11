@@ -20,6 +20,7 @@ import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.Calendar
 import jakarta.persistence.*
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
@@ -70,7 +71,8 @@ data class Payment(
     var transactionDate: LocalDate,
 
     @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @field:DecimalMin(value = "0.01", message = "amount must be at least 0.01")
+    @field:Digits(integer = 6, fraction = 2, message = Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal,
 

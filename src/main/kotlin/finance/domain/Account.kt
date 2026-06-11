@@ -108,8 +108,8 @@ data class Account(
     var validationDate: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     @JsonIgnore
-    @Column(name = "date_closed", nullable = false)
-    var dateClosed: Timestamp = Timestamp(0)
+    @Column(name = "date_closed", nullable = true)
+    var dateClosed: Timestamp? = null
 
     @JsonProperty
     @Column(name = "billing_statement_close_day", nullable = true)

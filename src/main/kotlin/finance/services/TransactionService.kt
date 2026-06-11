@@ -83,6 +83,9 @@ open class TransactionService(
             meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
         }
+        if (transaction.transactionState == TransactionState.Undefined) {
+            throw ValidationException("transactionState cannot be Undefined")
+        }
         val transactionOptional = findTransactionByGuid(transaction.guid)
 
         if (transactionOptional.isPresent) {
@@ -423,10 +426,13 @@ open class TransactionService(
         val calendar = Calendar.getInstance()
         calendar.time = java.sql.Date.valueOf(transaction.transactionDate)
 
-        if (transaction.reoccurringType == ReoccurringType.FortNightly) {
-            calendar.add(Calendar.DATE, 14)
-        } else {
-            calendar.add(Calendar.YEAR, 1) //Assumption this works for leap years
+        when (transaction.reoccurringType) {
+            ReoccurringType.FortNightly -> calendar.add(Calendar.DATE, 14)
+            ReoccurringType.Monthly -> calendar.add(Calendar.MONTH, 1)
+            ReoccurringType.Quarterly -> calendar.add(Calendar.MONTH, 3)
+            ReoccurringType.BiAnnually -> calendar.add(Calendar.MONTH, 6)
+            ReoccurringType.Annually -> calendar.add(Calendar.YEAR, 1)
+            else -> calendar.add(Calendar.YEAR, 1)
         }
 
         val transactionFuture = Transaction()

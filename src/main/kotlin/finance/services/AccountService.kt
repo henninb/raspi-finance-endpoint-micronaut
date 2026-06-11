@@ -206,9 +206,19 @@ open class AccountService(
             throw RuntimeException("Account not found: $accountNameOwner")
         }
         val account = accountOptional.get()
+        val reactivated = transactionRepository.reactivateAllTransactionsByAccountNameOwner(accountNameOwner)
+        logger.info("Reactivated $reactivated transactions for account: $accountNameOwner")
         account.activeStatus = true
+        account.dateClosed = null
         account.dateUpdated = Timestamp(System.currentTimeMillis())
         return accountRepository.saveAndFlush(account)
+    }
+
+    @Timed
+    open fun syncTotals(): Boolean {
+        updateTotalsForAllAccounts()
+        refreshValidationDates()
+        return true
     }
 
     companion object {

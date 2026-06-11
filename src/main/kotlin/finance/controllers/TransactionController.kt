@@ -232,6 +232,15 @@ class TransactionController(
         @QueryValue bonusAmount: BigDecimal,
         @QueryValue(defaultValue = "90") windowDays: Long
     ): HttpResponse<BonusProgress> {
+        if (targetAmount < BigDecimal.ZERO) {
+            throw HttpStatusException(HttpStatus.BAD_REQUEST, "targetAmount must be non-negative")
+        }
+        if (bonusAmount < BigDecimal.ZERO) {
+            throw HttpStatusException(HttpStatus.BAD_REQUEST, "bonusAmount must be non-negative")
+        }
+        if (windowDays < 1) {
+            throw HttpStatusException(HttpStatus.BAD_REQUEST, "windowDays must be at least 1")
+        }
         val progress = transactionService.getBonusProgress(accountNameOwner, startDate, targetAmount, bonusAmount, windowDays)
         return HttpResponse.ok(progress)
     }

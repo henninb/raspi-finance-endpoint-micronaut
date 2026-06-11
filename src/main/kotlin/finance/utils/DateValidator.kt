@@ -5,13 +5,16 @@ import java.time.LocalDate
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
 
-class DateValidator : ConstraintValidator<ValidDate, LocalDate> {
+class DateValidator : ConstraintValidator<ValidDate, LocalDate?> {
     override fun initialize(constraintAnnotation: ValidDate) {
     }
 
-    override fun isValid(value: LocalDate, context: ConstraintValidatorContext): Boolean {
+    override fun isValid(value: LocalDate?, context: ConstraintValidatorContext): Boolean {
         logger.debug("dateToBeEvaluated: $value")
-        return value.isAfter(LocalDate.of(2000, 1, 1))
+        if (value == null) return true
+        val minDate = LocalDate.of(2000, 1, 1)
+        val maxDate = LocalDate.now().plusYears(50)
+        return value.isAfter(minDate) && value.isBefore(maxDate)
     }
 
     companion object {
