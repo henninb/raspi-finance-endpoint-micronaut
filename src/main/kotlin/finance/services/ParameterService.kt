@@ -77,7 +77,7 @@ open class ParameterService(
         existing.parameterValue = parameter.parameterValue
         existing.activeStatus = parameter.activeStatus
         existing.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        parameterRepository.saveAndFlush(existing)
+        parameterRepository.update(existing)
         return true
     }
 
@@ -92,7 +92,7 @@ open class ParameterService(
         existing.parameterValue = parameter.parameterValue
         existing.activeStatus = parameter.activeStatus
         existing.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        parameterRepository.saveAndFlush(existing)
+        parameterRepository.update(existing)
         return true
     }
 
