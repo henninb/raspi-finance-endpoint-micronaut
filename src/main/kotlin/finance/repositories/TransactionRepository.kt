@@ -104,4 +104,43 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         nativeQuery = true,
     )
     fun reactivateAllTransactionsByAccountNameOwner(accountNameOwner: String): Int
+
+    fun findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner: String, activeStatus: Boolean = true): List<Transaction>
+
+    fun findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(
+        owner: String,
+        accountNameOwner: String,
+        activeStatus: Boolean = true
+    ): List<Transaction>
+
+    fun findByOwnerAndGuid(owner: String, guid: String): Optional<Transaction>
+
+    @Query(
+        value = """
+            SELECT * FROM t_transaction
+            WHERE owner = :owner
+              AND active_status = true
+              AND (:accountNameOwner IS NULL OR account_name_owner = :accountNameOwner)
+              AND (:startDate     IS NULL OR transaction_date >= CAST(:startDate AS DATE))
+              AND (:endDate       IS NULL OR transaction_date <= CAST(:endDate   AS DATE))
+              AND (:transactionState IS NULL OR transaction_state = :transactionState)
+              AND (:minAmount     IS NULL OR amount >= CAST(:minAmount AS NUMERIC))
+              AND (:maxAmount     IS NULL OR amount <= CAST(:maxAmount AS NUMERIC))
+              AND (:description   IS NULL OR description = :description)
+              AND (:category      IS NULL OR category    = :category)
+            ORDER BY transaction_date DESC
+        """,
+        nativeQuery = true
+    )
+    fun search(
+        owner: String,
+        accountNameOwner: String?,
+        startDate: String?,
+        endDate: String?,
+        transactionState: String?,
+        minAmount: Double?,
+        maxAmount: Double?,
+        description: String?,
+        category: String?,
+    ): List<Transaction>
 }

@@ -21,6 +21,7 @@ import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import java.util.Base64
 import finance.domain.BonusProgress
+import finance.repositories.TransactionSpecifications
 import io.micronaut.data.model.Page
 import io.micronaut.data.model.Pageable
 import io.micronaut.data.model.Sort
@@ -572,6 +573,22 @@ open class TransactionService(
             logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
         }
         return accountNeedingAttention
+    }
+
+    @Timed
+    open fun search(criteria: TransactionSpecifications.SearchCriteria): List<Transaction> {
+        TransactionSpecifications.validate(criteria)
+        return transactionRepository.search(
+            owner = criteria.owner,
+            accountNameOwner = criteria.accountNameOwner,
+            startDate = criteria.startDate,
+            endDate = criteria.endDate,
+            transactionState = criteria.transactionState,
+            minAmount = criteria.minAmount,
+            maxAmount = criteria.maxAmount,
+            description = criteria.description,
+            category = criteria.category,
+        )
     }
 
     @Timed

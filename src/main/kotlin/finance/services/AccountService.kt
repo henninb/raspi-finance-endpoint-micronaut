@@ -5,6 +5,9 @@ import finance.domain.Account
 import finance.repositories.AccountRepository
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
+import io.micronaut.data.model.Sort
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import org.apache.logging.log4j.LogManager
@@ -44,6 +47,11 @@ open class AccountService(
     }
 
     @Timed
+    open fun findByAccountNameOwner(owner: String, accountNameOwner: String): Optional<Account> {
+        return accountRepository.findByOwnerAndAccountNameOwner(owner, accountNameOwner)
+    }
+
+    @Timed
     open fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
@@ -63,6 +71,24 @@ open class AccountService(
             logger.info("findAllActiveAccounts - found accounts.")
         }
         return accounts
+    }
+
+    @Timed
+    open fun findByActiveStatusOrderByAccountNameOwner(owner: String): List<Account> {
+        val accounts = accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(owner)
+        if (accounts.isEmpty()) {
+            logger.warn("findAllActiveAccounts - no accounts found for owner: $owner")
+        } else {
+            logger.info("findAllActiveAccounts - found accounts for owner: $owner")
+        }
+        return accounts
+    }
+
+    @Timed
+    open fun findByActiveStatusOrderByAccountNameOwnerPaged(owner: String, pageable: Pageable): Page<Account> {
+        val sort = Sort.of(Sort.Order.asc("accountNameOwner"))
+        val sortedPageable = Pageable.from(pageable.number, pageable.size, sort)
+        return accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(owner, true, sortedPageable)
     }
 
     @Timed

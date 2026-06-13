@@ -5,6 +5,7 @@ import finance.domain.BonusProgress
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.repositories.TransactionSpecifications
 import finance.services.OwnerExtractorService
 import finance.services.TransactionService
 import io.micronaut.data.model.Page
@@ -243,6 +244,38 @@ class TransactionController(
         }
         val progress = transactionService.getBonusProgress(accountNameOwner, startDate, targetAmount, bonusAmount, windowDays)
         return HttpResponse.ok(progress)
+    }
+
+    @Get("/search", produces = ["application/json"])
+    fun searchTransactions(
+        request: HttpRequest<*>,
+        @QueryValue(defaultValue = "") accountNameOwner: String,
+        @QueryValue(defaultValue = "") startDate: String,
+        @QueryValue(defaultValue = "") endDate: String,
+        @QueryValue(defaultValue = "") transactionState: String,
+        @QueryValue(defaultValue = "") description: String,
+        @QueryValue(defaultValue = "") category: String,
+        @QueryValue minAmount: BigDecimal?,
+        @QueryValue maxAmount: BigDecimal?,
+    ): HttpResponse<List<Transaction>> {
+        val owner = extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        return try {
+            val criteria = TransactionSpecifications.SearchCriteria(
+                owner = owner,
+                accountNameOwner = accountNameOwner.ifBlank { null },
+                startDate = startDate.ifBlank { null },
+                endDate = endDate.ifBlank { null },
+                transactionState = transactionState.ifBlank { null },
+                minAmount = minAmount?.toDouble(),
+                maxAmount = maxAmount?.toDouble(),
+                description = description.ifBlank { null },
+                category = category.ifBlank { null },
+            )
+            val results = transactionService.search(criteria)
+            if (results.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(results)
+        } catch (e: IllegalArgumentException) {
+            throw HttpStatusException(HttpStatus.BAD_REQUEST, e.message)
+        }
     }
 
     @Post("/future", consumes = ["application/json"], produces = ["application/json"])

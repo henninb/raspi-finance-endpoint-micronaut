@@ -13,7 +13,11 @@ interface CategoryRepository : JpaRepository<Category, Long> {
     fun findByOwnerAndCategoryName(owner: String, categoryName: String): Optional<Category>
 
     fun findByActiveStatusOrderByCategoryName(activeStatus: Boolean): List<Category>
+    fun findByOwnerAndActiveStatusOrderByCategoryName(owner: String, activeStatus: Boolean = true): List<Category>
 
     @Transactional
     fun deleteByCategoryName(categoryName: String)
+
+    @Transactional
+    fun deleteByOwnerAndCategoryName(owner: String, categoryName: String)
 }

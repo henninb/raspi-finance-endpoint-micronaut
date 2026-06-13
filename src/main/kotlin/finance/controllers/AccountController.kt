@@ -5,6 +5,8 @@ import finance.domain.Account
 import finance.services.AccountService
 import finance.services.OwnerExtractorService
 import finance.services.TransactionService
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -20,16 +22,25 @@ class AccountController(
     @Inject val transactionService: TransactionService,
 ) {
 
+    @Get(value = "/active/paged", produces = ["application/json"])
+    fun selectAllActiveAccountsPaged(request: HttpRequest<*>, pageable: Pageable): HttpResponse<Page<Account>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val page = accountService.findByActiveStatusOrderByAccountNameOwnerPaged(owner, pageable)
+        return HttpResponse.ok(page)
+    }
+
     @Get(value = "/active", produces = ["application/json"])
-    fun selectAllActiveAccounts(): HttpResponse<List<Account>> {
+    fun selectAllActiveAccounts(request: HttpRequest<*>): HttpResponse<List<Account>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
         accountService.updateTheGrandTotalForAllClearedTransactions()
-        val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
+        val accounts = accountService.findByActiveStatusOrderByAccountNameOwner(owner)
         return if (accounts.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(accounts)
     }
 
     @Get(value = "/{accountNameOwner}", produces = ["application/json"])
-    fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): HttpResponse<Account> {
-        val optional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
+    fun selectByAccountNameOwner(@PathVariable accountNameOwner: String, request: HttpRequest<*>): HttpResponse<Account> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional: Optional<Account> = accountService.findByAccountNameOwner(owner, accountNameOwner)
         return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
@@ -55,8 +66,9 @@ class AccountController(
     }
 
     @Delete(value = "/{accountNameOwner}", produces = ["application/json"])
-    fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String): HttpResponse<Account> {
-        val optional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
+    fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String, request: HttpRequest<*>): HttpResponse<Account> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional: Optional<Account> = accountService.findByAccountNameOwner(owner, accountNameOwner)
         if (optional.isPresent) {
             accountService.deleteByAccountNameOwner(accountNameOwner)
             return HttpResponse.ok(optional.get())
@@ -85,23 +97,30 @@ class AccountController(
     @Put(value = "/rename", produces = [MediaType.APPLICATION_JSON])
     fun renameAccountNameOwner(
         @QueryValue("old") oldAccountNameOwner: String,
-        @QueryValue("new") newAccountNameOwner: String
+        @QueryValue("new") newAccountNameOwner: String,
+        request: HttpRequest<*>
     ): HttpResponse<Account> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (accountService.findByAccountNameOwner(owner, oldAccountNameOwner).isEmpty) return HttpResponse.notFound()
         if (accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)) {
-            val optional = accountService.findByAccountNameOwner(newAccountNameOwner)
+            val optional = accountService.findByAccountNameOwner(owner, newAccountNameOwner)
             return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.badRequest()
         }
         return HttpResponse.badRequest()
     }
 
     @Put(value = "/deactivate/{accountNameOwner}", produces = ["application/json"])
-    fun deactivateAccount(@PathVariable accountNameOwner: String): HttpResponse<Account> {
+    fun deactivateAccount(@PathVariable accountNameOwner: String, request: HttpRequest<*>): HttpResponse<Account> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (accountService.findByAccountNameOwner(owner, accountNameOwner).isEmpty) return HttpResponse.notFound()
         return try { HttpResponse.ok(accountService.deactivateAccount(accountNameOwner)) }
         catch (e: RuntimeException) { HttpResponse.notFound() }
     }
 
     @Put(value = "/activate/{accountNameOwner}", produces = ["application/json"])
-    fun activateAccount(@PathVariable accountNameOwner: String): HttpResponse<Account> {
+    fun activateAccount(@PathVariable accountNameOwner: String, request: HttpRequest<*>): HttpResponse<Account> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (accountService.findByAccountNameOwner(owner, accountNameOwner).isEmpty) return HttpResponse.notFound()
         return try { HttpResponse.ok(accountService.activateAccount(accountNameOwner)) }
         catch (e: RuntimeException) { HttpResponse.notFound() }
     }

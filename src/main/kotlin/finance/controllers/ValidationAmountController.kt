@@ -20,9 +20,11 @@ class ValidationAmountController(
     @Get("/active")
     @Produces("application/json")
     fun selectAllActive(
+        request: HttpRequest<*>,
         @QueryValue(defaultValue = "") accountNameOwner: String,
         @QueryValue(defaultValue = "") transactionState: String
     ): HttpResponse<List<ValidationAmount>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
         if (accountNameOwner.isNotBlank() && transactionState.isNotBlank()) {
             val state = try {
                 TransactionState.valueOf(
@@ -35,14 +37,15 @@ class ValidationAmountController(
             return if (result.validationId == 0L) HttpResponse.ok(emptyList())
             else HttpResponse.ok(listOf(result))
         }
-        val results = validationAmountService.findAllActive()
+        val results = validationAmountService.findAllActive(owner)
         return if (results.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(results)
     }
 
     @Get("/{validationId}")
     @Produces("application/json")
-    fun selectById(@PathVariable validationId: Long): HttpResponse<ValidationAmount> {
-        val result = validationAmountService.findById(validationId)
+    fun selectById(@PathVariable validationId: Long, request: HttpRequest<*>): HttpResponse<ValidationAmount> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val result = validationAmountService.findById(owner, validationId)
         return if (result.isPresent) HttpResponse.ok(result.get()) else HttpResponse.notFound()
     }
 

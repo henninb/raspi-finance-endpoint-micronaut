@@ -91,8 +91,14 @@ open class ValidationAmountService(
     open fun findAllActive(): List<ValidationAmount> =
         validationAmountRepository.findByActiveStatusTrue()
 
+    open fun findAllActive(owner: String): List<ValidationAmount> =
+        validationAmountRepository.findByOwnerAndActiveStatusTrue(owner)
+
     open fun findById(validationId: Long): Optional<ValidationAmount> =
         validationAmountRepository.findById(validationId)
+
+    open fun findById(owner: String, validationId: Long): Optional<ValidationAmount> =
+        validationAmountRepository.findByOwnerAndValidationId(owner, validationId)
 
     open fun updateValidationAmount(validationId: Long, validationAmount: ValidationAmount): Optional<ValidationAmount> {
         val existing = validationAmountRepository.findById(validationId)

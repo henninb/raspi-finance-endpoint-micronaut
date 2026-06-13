@@ -45,12 +45,55 @@ open class ParameterService(
         parameterRepository.findByActiveStatusOrderByParameterName()
 
     @Timed
+    open fun findAllActive(owner: String): List<Parameter> =
+        parameterRepository.findByOwnerAndActiveStatusOrderByParameterName(owner)
+
+    @Timed
     open fun findByParameter(parameterName: String): Optional<Parameter> {
         val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parameterName)
         if (parameterOptional.isPresent) {
             return parameterOptional
         }
         return Optional.empty()
+    }
+
+    @Timed
+    open fun findByParameter(owner: String, parameterName: String): Optional<Parameter> =
+        parameterRepository.findByOwnerAndParameterName(owner, parameterName)
+
+    @Timed
+    open fun deleteByParameterName(owner: String, parameterName: String) {
+        parameterRepository.deleteByOwnerAndParameterName(owner, parameterName)
+    }
+
+    @Timed
+    open fun updateParameter(parameterName: String, parameter: Parameter): Boolean {
+        val optional = parameterRepository.findByParameterName(parameterName)
+        if (!optional.isPresent) {
+            logger.warn("Parameter not found: $parameterName")
+            return false
+        }
+        val existing = optional.get()
+        existing.parameterValue = parameter.parameterValue
+        existing.activeStatus = parameter.activeStatus
+        existing.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        parameterRepository.saveAndFlush(existing)
+        return true
+    }
+
+    @Timed
+    open fun updateParameter(owner: String, parameterName: String, parameter: Parameter): Boolean {
+        val optional = parameterRepository.findByOwnerAndParameterName(owner, parameterName)
+        if (!optional.isPresent) {
+            logger.warn("Parameter not found for owner=$owner name=$parameterName")
+            return false
+        }
+        val existing = optional.get()
+        existing.parameterValue = parameter.parameterValue
+        existing.activeStatus = parameter.activeStatus
+        existing.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        parameterRepository.saveAndFlush(existing)
+        return true
     }
 
     companion object {

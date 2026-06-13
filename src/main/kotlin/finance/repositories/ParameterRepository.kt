@@ -11,6 +11,12 @@ interface ParameterRepository : JpaRepository<Parameter, Long> {
     fun findByParameterName(parameterName: String): Optional<Parameter>
     fun findByActiveStatusOrderByParameterName(activeStatus: Boolean = true): List<Parameter>
 
+    fun findByOwnerAndParameterName(owner: String, parameterName: String): Optional<Parameter>
+    fun findByOwnerAndActiveStatusOrderByParameterName(owner: String, activeStatus: Boolean = true): List<Parameter>
+
     @Transactional
     fun deleteByParameterName(parameterName: String)
+
+    @Transactional
+    fun deleteByOwnerAndParameterName(owner: String, parameterName: String)
 }

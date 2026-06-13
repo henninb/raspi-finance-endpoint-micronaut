@@ -1,11 +1,13 @@
 package finance.services
 
 import finance.domain.Transfer
-//import finance.domain.Transaction
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import java.util.*
 
 interface ITransferService {
     fun findAllTransfers(): List<Transfer>
+    fun findAllTransfersPaged(pageable: Pageable): Page<Transfer>
 
     fun insertTransfer(transfer: Transfer): Transfer
 //

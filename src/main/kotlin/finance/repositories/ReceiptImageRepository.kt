@@ -8,4 +8,8 @@ import java.util.*
 @Repository
 interface ReceiptImageRepository : JpaRepository<ReceiptImage, Long> {
     fun findByTransactionId(transactionId: Long): Optional<ReceiptImage>
+
+    fun findByOwnerAndTransactionId(owner: String, transactionId: Long): Optional<ReceiptImage>
+    fun findAllByOwner(owner: String): List<ReceiptImage>
+    fun findByOwnerAndReceiptImageId(owner: String, receiptImageId: Long): Optional<ReceiptImage>
 }

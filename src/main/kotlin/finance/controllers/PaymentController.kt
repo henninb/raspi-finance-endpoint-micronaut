@@ -3,6 +3,8 @@ package finance.controllers
 import finance.domain.Payment
 import finance.services.OwnerExtractorService
 import finance.services.PaymentService
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -16,13 +18,22 @@ class PaymentController(
     @Inject val ownerExtractorService: OwnerExtractorService,
 ) {
 
+    @Get("/active/paged", produces = ["application/json"])
+    fun selectAllPaymentsPaged(request: HttpRequest<*>, pageable: Pageable): HttpResponse<Page<Payment>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        return HttpResponse.ok(paymentService.findAllPaymentsPaged(owner, pageable))
+    }
+
     @Get("/active", produces = ["application/json"])
-    fun selectAllPayments(): HttpResponse<List<Payment>> =
-        HttpResponse.ok(paymentService.findAllPayments())
+    fun selectAllPayments(request: HttpRequest<*>): HttpResponse<List<Payment>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        return HttpResponse.ok(paymentService.findAllPayments(owner))
+    }
 
     @Get("/{paymentId}", produces = ["application/json"])
-    fun selectByPaymentId(@PathVariable paymentId: Long): HttpResponse<Payment> {
-        val optional: Optional<Payment> = paymentService.findByPaymentId(paymentId)
+    fun selectByPaymentId(@PathVariable paymentId: Long, request: HttpRequest<*>): HttpResponse<Payment> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional = paymentService.findByOwnerAndPaymentId(owner, paymentId)
         return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
@@ -43,8 +54,9 @@ class PaymentController(
     }
 
     @Delete("/{paymentId}", produces = ["application/json"])
-    fun deleteByPaymentId(@PathVariable paymentId: Long): HttpResponse<Payment> {
-        val optional: Optional<Payment> = paymentService.findByPaymentId(paymentId)
+    fun deleteByPaymentId(@PathVariable paymentId: Long, request: HttpRequest<*>): HttpResponse<Payment> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional = paymentService.findByOwnerAndPaymentId(owner, paymentId)
         if (optional.isPresent) {
             paymentService.deleteByPaymentId(paymentId)
             return HttpResponse.ok(optional.get())

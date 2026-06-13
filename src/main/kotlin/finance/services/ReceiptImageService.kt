@@ -42,6 +42,14 @@ open class ReceiptImageService(
     }
 
     @Timed
+    open fun findAllActive(owner: String): List<ReceiptImage> =
+        receiptImageRepository.findAllByOwner(owner)
+
+    @Timed
+    open fun findByOwnerAndReceiptImageId(owner: String, receiptImageId: Long) =
+        receiptImageRepository.findByOwnerAndReceiptImageId(owner, receiptImageId)
+
+    @Timed
     open fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
     }

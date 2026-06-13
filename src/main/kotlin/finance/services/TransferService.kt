@@ -4,6 +4,9 @@ import finance.domain.*
 import finance.exceptions.DuplicateTransferException
 import finance.repositories.TransferRepository
 import io.micrometer.core.annotation.Timed
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
+import io.micronaut.data.model.Sort
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import java.math.BigDecimal
@@ -23,6 +26,13 @@ open class TransferService(
         val transfers = transferRepository.findAll().sortedByDescending { transfer -> transfer.transactionDate }
         logger.info("Found ${transfers.size} transfers")
         return transfers
+    }
+
+    @Timed
+    override fun findAllTransfersPaged(pageable: Pageable): Page<Transfer> {
+        val sort = Sort.of(Sort.Order.desc("transactionDate"))
+        val sortedPageable = Pageable.from(pageable.number, pageable.size, sort)
+        return transferRepository.findByActiveStatusOrderByTransactionDateDesc(true, sortedPageable)
     }
 
 

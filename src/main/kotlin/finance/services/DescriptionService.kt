@@ -44,8 +44,26 @@ open class DescriptionService(
     }
 
     @Timed
+    open fun deleteByDescriptionName(owner: String, descriptionName: String): Boolean {
+        descriptionRepository.deleteByOwnerAndDescriptionName(owner, descriptionName)
+        return true
+    }
+
+    @Timed
     open fun fetchAllDescriptions(): List<Description> {
         val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
+        if (descriptions.isNotEmpty()) {
+            val countMap = transactionRepository
+                .countByDescriptionNameIn(descriptions.map { it.descriptionName })
+                .associate { row -> row[0] as String to row[1] as Long }
+            descriptions.forEach { it.descriptionCount = countMap[it.descriptionName] ?: 0L }
+        }
+        return descriptions
+    }
+
+    @Timed
+    open fun fetchAllDescriptions(owner: String): List<Description> {
+        val descriptions = descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(owner)
         if (descriptions.isNotEmpty()) {
             val countMap = transactionRepository
                 .countByDescriptionNameIn(descriptions.map { it.descriptionName })

@@ -3,6 +3,8 @@ package finance.controllers
 import finance.domain.Transfer
 import finance.exceptions.DuplicateTransferException
 import finance.services.TransferService
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.*
@@ -19,6 +21,13 @@ class TransferController(private var transferService: TransferService) : BaseCon
         val transfers = transferService.findAllTransfers()
 
         return HttpResponse.ok(transfers)
+    }
+
+    @Get("/active/paged")
+    @Produces("application/json")
+    fun selectAllTransfersPaged(pageable: Pageable): HttpResponse<Page<Transfer>> {
+        val page = transferService.findAllTransfersPaged(pageable)
+        return HttpResponse.ok(page)
     }
 
     @Post

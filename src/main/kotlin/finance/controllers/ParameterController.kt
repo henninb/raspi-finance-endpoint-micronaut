@@ -17,14 +17,16 @@ class ParameterController(
 ) {
 
     @Get("/active", produces = ["application/json"])
-    fun selectAllActive(): HttpResponse<List<Parameter>> {
-        val results = parameterService.findAllActive()
+    fun selectAllActive(request: HttpRequest<*>): HttpResponse<List<Parameter>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val results = parameterService.findAllActive(owner)
         return if (results.isEmpty()) HttpResponse.notFound() else HttpResponse.ok(results)
     }
 
     @Get("/{parameterName}", produces = ["application/json"])
-    fun selectParameter(@PathVariable parameterName: String): HttpResponse<Parameter> {
-        val optional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+    fun selectParameter(@PathVariable parameterName: String, request: HttpRequest<*>): HttpResponse<Parameter> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional: Optional<Parameter> = parameterService.findByParameter(owner, parameterName)
         return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
@@ -36,11 +38,23 @@ class ParameterController(
         return HttpResponse.status<Parameter>(HttpStatus.CREATED).body(parameter)
     }
 
+    @Put("/{parameterName}", produces = ["application/json"])
+    fun updateParameter(@PathVariable parameterName: String, @Body parameter: Parameter, request: HttpRequest<*>): HttpResponse<Parameter> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        if (parameterService.updateParameter(owner, parameterName, parameter)) {
+            return parameterService.findByParameter(owner, parameterName)
+                .map { HttpResponse.ok(it) }
+                .orElse(HttpResponse.notFound())
+        }
+        return HttpResponse.notFound()
+    }
+
     @Delete("/{parameterName}", produces = ["application/json"])
-    fun deleteByParameterName(@PathVariable parameterName: String): HttpResponse<Parameter> {
-        val optional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+    fun deleteByParameterName(@PathVariable parameterName: String, request: HttpRequest<*>): HttpResponse<Parameter> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional: Optional<Parameter> = parameterService.findByParameter(owner, parameterName)
         if (optional.isPresent) {
-            parameterService.deleteByParameterName(parameterName)
+            parameterService.deleteByParameterName(owner, parameterName)
             return HttpResponse.ok(optional.get())
         }
         return HttpResponse.notFound()

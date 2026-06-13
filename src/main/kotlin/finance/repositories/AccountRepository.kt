@@ -5,6 +5,8 @@ import finance.domain.AccountType
 import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
 import java.math.BigDecimal
 import java.util.*
 import jakarta.transaction.Transactional
@@ -12,7 +14,10 @@ import jakarta.transaction.Transactional
 @Repository
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
+    fun findByOwnerAndAccountNameOwner(owner: String, accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
+    fun findByOwnerAndActiveStatusOrderByAccountNameOwner(owner: String, activeStatus: Boolean = true): List<Account>
+    fun findByOwnerAndActiveStatusOrderByAccountNameOwner(owner: String, activeStatus: Boolean = true, pageable: Pageable): Page<Account>
 
     @Query(
         value = "SELECT * FROM t_account WHERE account_type = 'credit' AND active_status = true AND (outstanding > 0 OR future > 0 OR cleared > 0) ORDER BY account_name_owner",

@@ -8,6 +8,9 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import io.micrometer.core.annotation.Timed
+import io.micronaut.data.model.Page
+import io.micronaut.data.model.Pageable
+import io.micronaut.data.model.Sort
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import org.apache.logging.log4j.LogManager
@@ -31,6 +34,24 @@ open class PaymentService(
     @Timed
     open fun findAllPayments(): List<Payment> {
         return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
+    }
+
+    @Timed
+    open fun findAllPayments(owner: String): List<Payment> =
+        paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner)
+
+    @Timed
+    open fun findAllPaymentsPaged(pageable: Pageable): Page<Payment> {
+        val sort = Sort.of(Sort.Order.desc("transactionDate"))
+        val sortedPageable = Pageable.from(pageable.number, pageable.size, sort)
+        return paymentRepository.findByActiveStatusOrderByTransactionDateDesc(true, sortedPageable)
+    }
+
+    @Timed
+    open fun findAllPaymentsPaged(owner: String, pageable: Pageable): Page<Payment> {
+        val sort = Sort.of(Sort.Order.desc("transactionDate"))
+        val sortedPageable = Pageable.from(pageable.number, pageable.size, sort)
+        return paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, sortedPageable)
     }
 
     @Timed
@@ -146,6 +167,10 @@ open class PaymentService(
         }
         return Optional.empty()
     }
+
+    @Timed
+    open fun findByOwnerAndPaymentId(owner: String, paymentId: Long): Optional<Payment> =
+        paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
 
     @Timed
     open fun updatePayment(payment: Payment): Boolean {

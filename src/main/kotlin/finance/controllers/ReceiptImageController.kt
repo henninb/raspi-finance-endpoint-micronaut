@@ -16,12 +16,15 @@ class ReceiptImageController(
 ) {
 
     @Get("/active", produces = ["application/json"])
-    fun selectAllActive(): HttpResponse<List<ReceiptImage>> =
-        HttpResponse.ok(receiptImageService.findAllActive())
+    fun selectAllActive(request: HttpRequest<*>): HttpResponse<List<ReceiptImage>> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        return HttpResponse.ok(receiptImageService.findAllActive(owner))
+    }
 
     @Get("/{receiptImageId}", produces = ["application/json"])
-    fun selectById(@PathVariable receiptImageId: Long): HttpResponse<ReceiptImage> {
-        val optional = receiptImageService.findByReceiptImageId(receiptImageId)
+    fun selectById(@PathVariable receiptImageId: Long, request: HttpRequest<*>): HttpResponse<ReceiptImage> {
+        val owner = ownerExtractorService.extractOwner(request) ?: return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+        val optional = receiptImageService.findByOwnerAndReceiptImageId(owner, receiptImageId)
         return if (optional.isPresent) HttpResponse.ok(optional.get()) else HttpResponse.notFound()
     }
 
